@@ -1,37 +1,46 @@
 AFRAME.registerComponent('maintenance-cursor', {
     init: function() {
-      const el = this.el; // Armazena a referência ao elemento
-      const factText = document.getElementById('fact-text');
-      let fact = '';
+        // const el = this.el; // Armazena a referência ao elemento
+        const factText = document.getElementById('fact-text');
+        let fact = '';
   
-      fetch('http://numbersapi.com/random/trivia')
+        fetch('http://numbersapi.com/random/trivia')
         .then(response => response.text())
         .then(data => {
-          fact = data;
+            fact = data;
         })
         .catch(error => console.error('Erro ao conectar à API:', error));
-  
-      this.el.addEventListener('click', function() {
-        factText.setAttribute('value', fact);
-      });
+    
+        this.el.addEventListener('click', function() {
+            factText.setAttribute('value', fact);
+        });
+        
+        // // tentativa para clicar com o celular
+        // this.el.addEventListener('touchstart', function() {
+        //     factText.setAttribute('value', fact);
+        // });
     }
-  });
+});
   
-  AFRAME.registerComponent('status-cursor', {
+AFRAME.registerComponent('status-cursor', {
     init: function() {
-      const el = this.el; // Armazena a referência ao elemento
-      const factText = document.getElementById('fact-text');
-      let fact = '';
-  
-      fetch('http://numbersapi.com/random/trivia')
+        // const el = this.el; // Armazena a referência ao elemento
+        const factText = document.getElementById('fact-text');
+        let fact = '';
+
+        fetch('http://numbersapi.com/random/trivia')
         .then(response => response.text())
         .then(data => {
-          fact = data;
+            fact = data;
         })
         .catch(error => console.error('Erro ao conectar à API:', error));
-  
-      this.el.addEventListener('click', function() {
-        factText.setAttribute('value', fact);
-      });
+    
+        this.el.addEventListener('click', function() {
+            factText.setAttribute('value', fact);
+        });
+        // // tentativa para clicar com o celular
+        // this.el.addEventListener('touchstart', function() {
+        //     factText.setAttribute('value', fact);
+        // });
     }
-  });
+});
