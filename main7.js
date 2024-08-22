@@ -14,11 +14,6 @@ AFRAME.registerComponent('maintenance-cursor', {
         this.el.addEventListener('click', function() {
             factText.setAttribute('value', fact);
         });
-        
-        // // tentativa para clicar com o celular
-        // this.el.addEventListener('touchstart', function() {
-        //     factText.setAttribute('value', fact);
-        // });
     }
 });
   
@@ -38,9 +33,5 @@ AFRAME.registerComponent('status-cursor', {
         this.el.addEventListener('click', function() {
             factText.setAttribute('value', fact);
         });
-        // // tentativa para clicar com o celular
-        // this.el.addEventListener('touchstart', function() {
-        //     factText.setAttribute('value', fact);
-        // });
     }
 });
