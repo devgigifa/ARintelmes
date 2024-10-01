@@ -15,7 +15,7 @@ Projeto em realidade aumentada para exibir informações de máquina de forma r�
 - transformar as informações da máquina em realidade aumentada
 - armazena no glitch cada um
 - criar link pro AR de cada máquina
-- gerar qr codes
+- gerar qr code
 
 ## Tecnologias:
 
@@ -25,10 +25,10 @@ Projeto em realidade aumentada para exibir informações de máquina de forma r�
 - AR.js
 
 
-## Bibliotecas:
+<!-- ## Bibliotecas:
 
 - npm i express
 - npm init -y
 - npm config set strict-ssl false
 - npm install express axios
-- node proxy.js
+- node proxy.js -->
