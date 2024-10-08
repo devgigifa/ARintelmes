@@ -1,10 +1,15 @@
 
+<!-- teste com imagem de fundo
+    no teste, percebe-se que precisa de uma 
+    imagem compatível com 360°
+-->
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Main 7</title>
+    <title>Teste 3</title>
     <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
     <script src="https://unpkg.com/aframe-event-set@1.4.0/dist/aframe-event-set.min.js"></script>
 
@@ -23,9 +28,11 @@
                 .catch(error => console.error('Erro ao conectar à API:', error));
 
                 el.addEventListener('click', function() {
+                    alert("manutenção");
                     factText.setAttribute('value', fact);
                 });
                 el.addEventListener('touchstart', function() {
+                    alert("manutenção");
                     factText.setAttribute('value', fact);
                 });
             }
@@ -45,9 +52,11 @@
                 .catch(error => console.error('Erro ao conectar à API:', error));
                 
                 el.addEventListener('click', function() {
+                    alert("status");
                     factText.setAttribute('value', fact);
                 });
                 el.addEventListener('touchstart', function() {
+                    alert("status");
                     factText.setAttribute('value', fact);
                 });
             }
@@ -55,8 +64,9 @@
     </script>
 </head>
 
-<body style="margin: 0px; overflow:hidden">
+<body style="margin: 0px; overflow:hidden" >
     <a-scene>
+        <a-sky src="/img/intelbras2.jpg"></a-sky>
         <a-entity 
             cursor="rayOrigin: mouse;" 
             raycaster="objects: .clickable; far: 10; showLine: true"
@@ -122,52 +132,6 @@
             position="-0.5 1.1 -2.4" align="center" 
         >
         </a-text>   
-<!-- adicionando mais elementos -->
-        <a-text 
-            value="qtd. produzida" 
-            color="white" 
-            width="1.3"
-            scale="1.3 1.3 1.3" 
-            position="0.5 1.8 -2.4" align="center" 
-        >
-        </a-text>  
-
-        <a-text 
-            value="qtd" 
-            color="white" 
-            width="1.3"
-            scale="1.3 1.3 1.3" 
-            position="0 1.8 -2.4" align="center" 
-        >
-        </a-text>
-
-        <a-text 
-            value="op" 
-            color="white" 
-            width="1.3"
-            scale="1.3 1.3 1.3" 
-            position="-0.5 1.8 -2.4" align="center" 
-        >
-        </a-text>
-        
-        <a-text
-            value="INJ000" 
-            color="white" 
-            width="1.3"
-            scale="3 3 3" 
-            position="0 2.7 -2.4" align="center" 
-        >
-        </a-text>
-
-        <a-text
-            value="producao" 
-            color="white" 
-            width="1.3"
-            scale="2 2 2" 
-            position="0 2.5 -2.4" align="center" 
-        >
-        </a-text>
-
     </a-scene>
 </body>
 </html>

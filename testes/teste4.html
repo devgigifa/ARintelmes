@@ -1,181 +1,442 @@
-
-<!-- teste com javascript para mudar o tamanho da grandbox para se 
- adaptar ao alongamento do modo vr e assim não prejudicar a exibição 
- sem camera inicial -->
-
+<!-- 
+    TESTANDO APLICAÇÃO COM O GAUGE 
+    não ta aparecendo os gauges
+    o objetivo é no botão status aparecer a 
+    blackbox com os gauges
+-->
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Main 8</title>
+    <title>Main 5</title>
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 
     <script>
-      AFRAME.registerComponent("maintenance-cursor", {
-        init: function () {
-          const el = this.el;
-          const factText = document.getElementById("fact-text");
-          let fact = "";
+        function initAR() {
+            const scene = document.querySelector("#a-scene");
+            scene.style.display = "block"; 
+        }
 
-          fetch("http://numbersapi.com/random/trivia")
-            .then((response) => response.text())
-            .then((data) => {
-              fact = data;
+        function showBlackBox() {
+            const blackbox = document.getElementById("blackbox");
+            const gauges = [
+                document.getElementById("gauge-OEE"),
+                document.getElementById("gauge-Disponibilidade"),
+                document.getElementById("gauge-Performance"),
+                document.getElementById("gauge-Qualidade"),
+            ];
+
+            blackbox.setAttribute("visible", true);
+            gauges.forEach(gauge => gauge.setAttribute("visible", true));
+        }
+
+        AFRAME.registerComponent("maintenance-cursor", {
+            init: function () {
+                const el = this.el;
+                const factText = document.getElementById("fact-text");
+                let fact = "";
+
+                fetch("https://cors-anywhere.herokuapp.com/http://numbersapi.com/random/trivia")
+                    .then((response) => response.text())
+                    .then((data) => {
+                        fact = data;
+                    })
+                    .catch((error) => console.error("Erro ao conectar à API:", error));
+
+                el.addEventListener("click", function () {
+                    factText.setAttribute("value", fact);
+                });
+            },
+        });
+
+        AFRAME.registerComponent("status-cursor", {
+            init: function () {
+                const el = this.el;
+                const factText = document.getElementById("fact-text");
+                let fact = "";
+
+                fetch("https://cors-anywhere.herokuapp.com/http://numbersapi.com/random/trivia")
+                    .then((response) => response.text())
+                    .then((data) => {
+                        fact = data;
+                    })
+                    .catch((error) => console.error("Erro ao conectar à API:", error));
+
+                el.addEventListener("click", function () {
+                    factText.setAttribute("value", fact);
+                    showBlackBox(); // Chama a função para mostrar a blackbox e os gauges
+                });
+            },
+        });
+
+        // Função para inicializar os gauges com valores aleatórios
+        function initializeGauges() {
+            let oeeValue = getRandomInitialValue();
+            let dispValue = getRandomInitialValue();
+            let perfValue = getRandomInitialValue();
+            let qualValue = getRandomInitialValue();
+
+            // Atualiza os gauges com os valores iniciais
+            updateGauge(oeeValue, 'text-OEE', 'ring-OEE');
+            updateGauge(dispValue, 'text-Disponibilidade', 'ring-Disponibilidade');
+            updateGauge(perfValue, 'text-Performance', 'ring-Performance');
+            updateGauge(qualValue, 'text-Qualidade', 'ring-Qualidade');
+        }
+
+        // Função para atualizar os valores de todos os gauges de forma gradual
+        function randomUpdate() {
+            let oeeValue = parseInt(document.getElementById('text-OEE').getAttribute('value').split(': ')[1].replace('%', ''));
+            let dispValue = parseInt(document.getElementById('text-Disponibilidade').getAttribute('value').split(': ')[1].replace('%', ''));
+            let perfValue = parseInt(document.getElementById('text-Performance').getAttribute('value').split(': ')[1].replace('%', ''));
+            let qualValue = parseInt(document.getElementById('text-Qualidade').getAttribute('value').split(': ')[1].replace('%', ''));
+
+            oeeValue = getRandomValue(oeeValue);
+            dispValue = getRandomValue(dispValue);
+            perfValue = getRandomValue(perfValue);
+            qualValue = getRandomValue(qualValue);
+
+            updateGauge(oeeValue, 'text-OEE', 'ring-OEE');
+            updateGauge(dispValue, 'text-Disponibilidade', 'ring-Disponibilidade');
+            updateGauge(perfValue, 'text-Performance', 'ring-Performance');
+            updateGauge(qualValue, 'text-Qualidade', 'ring-Qualidade');
+        }
+
+        // Funções auxiliares
+        function getRandomInitialValue() {
+            return Math.floor(Math.random() * 100);
+        }
+
+        function getRandomValue(currentValue) {
+            return Math.min(Math.max(currentValue + (Math.random() > 0.5 ? 1 : -1), 0), 100);
+        }
+
+        function updateGauge(value, textId, ringId) {
+            const textElement = document.getElementById(textId);
+            const ringElement = document.getElementById(ringId);
+
+            textElement.setAttribute('value', `${textElement.getAttribute('value').split(': ')[0]}: ${value}%`);
+            ringElement.setAttribute('theta-length', (value / 100) * 360);
+        }
+
+        // Inicia a aplicação
+        navigator.mediaDevices
+            .getUserMedia({ video: true })
+            .then(() => {
+                initAR(); // Inicializa a AR
+                initializeGauges(); // Inicializa os gauges com valores aleatórios
+                setInterval(randomUpdate, 1000); // Atualiza os gauges a cada segundo
             })
-            .catch((error) => console.error("Erro ao conectar à API:", error));
-
-          el.addEventListener("click", function () {
-            alert("manutenção");
-            factText.setAttribute("value", fact);
-          });
-          el.addEventListener("touchstart", function () {
-            alert("manutenção");
-            factText.setAttribute("value", fact);
-          });
-        },
-      });
-
-      AFRAME.registerComponent("status-cursor", {
-        init: function () {
-          const el = this.el;
-          const factText = document.getElementById("fact-text");
-          let fact = "";
-
-          fetch("http://numbersapi.com/random/trivia")
-            .then((response) => response.text())
-            .then((data) => {
-              fact = data;
-            })
-            .catch((error) => console.error("Erro ao conectar à API:", error));
-
-          el.addEventListener("click", function () {
-            alert("status");
-            factText.setAttribute("value", fact);
-          });
-          el.addEventListener("touchstart", function () {
-            alert("status");
-            factText.setAttribute("value", fact);
-          });
-        },
-      });
-
-      AFRAME.registerComponent("camera-listener", {
-        init: function () {
-          const sceneEl = this.el;
-          const grandbox = document.getElementById("grandbox");
-
-          sceneEl.addEventListener("enter-vr", function () {
-            if (confirm("Permitir acesso à câmera?")) {
-              grandbox.setAttribute("scale", "2 1 0.5"); // Ajustar para o modo AR
-              grandbox.setAttribute("position", "0 1.25 -3"); // Ajustar a posição
-            }
-          });
-
-          // Remover o código de saída da câmera se não for necessário
-          // sceneEl.addEventListener("exit-vr", function () {
-          //   grandbox.setAttribute("scale", "2 2 0.5"); // Ajustar para o modo normal
-          //   grandbox.setAttribute("position", "0 2.25 -3"); // Restaurar a posição
-          // });
-        },
-      });
+            .catch((err) => console.error("Permissão de câmera negada:", err));
     </script>
 
     <style>
-      #video {
-        width: 100%;
-        height: 100vh;
-        object-fit: cover;
-      }
-
-      #a-scene {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-      }
+        #a-scene {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
     </style>
 </head>
 
 <body>
     <a-scene
-      id="a-scene"
-      embedded
-      arjs="sourceType: webcam; debugUIEnabled: false;"
-      camera-listener
+        id="a-scene"
+        embedded arjs="sourceType: webcam; debugUIEnabled: false;"
+        camera="position: 0 1.6 0; fov: 80;" init-ar
     >
-      <a-entity
-        cursor="rayOrigin: mouse;"
-        raycaster="objects: .clickable; far: 10; showLine: true"
-      >
-      </a-entity>
+        <a-entity
+            cursor="rayOrigin: mouse;"
+            raycaster="objects: .clickable; far: 10; showLine: true"
+        ></a-entity>
 
-      <a-box
-        id="grandbox"
-        position="0 2.25 -3"
-        rotation="0 0 0"
-        color="#00a335"
-        scale="2 2 0.5"
-      >
+        <a-box
+            id="grandbox"
+            position="0 1.25 -3"
+            rotation="0 0 0"
+            color="#00a335"
+            scale="2 1 0.5"
+        >
+            <a-text
+                id="fact-text"
+                value=""
+                color="white"
+                scale="1.8 2 1"
+                position="0 0 1"
+                align="center"
+                width="0.5"
+            ></a-text>
+        </a-box>
+
+        <a-box
+            id="rightbox"
+            color="#50788a"
+            scale="0.8 0.2 0.3"
+            position="0.6 0.5 -3"
+            rotation="0 0 0"
+            maintenance-cursor
+            class="clickable"
+            raycaster="objects: .clickable; far: 10; showLine: true"
+        ></a-box>
+
+        <a-box
+            id="leftbox"
+            color="#50788a"
+            scale="0.8 0.2 0.3"
+            position="-0.6 0.5 -3"
+            rotation="0 0 0"
+            status-cursor
+            class="clickable"
+            raycaster="objects: .clickable; far: 10; showLine: true"
+        ></a-box>
+
         <a-text
-          id="fact-text"
-          value=""
-          color="white"
-          scale="1.8 2 1"
-          position="0 0 1"
-          align="center"
-          width="0.5"
+            value="maintenance"
+            color="white"
+            width="1.3"
+            scale="1.8 1.8 1.8"
+            position="0.5 0.7 -2.4"
+            align="center"
+        ></a-text>
+        <a-text
+            value="status"
+            color="white"
+            width="1.3"
+            scale="1.8 1.8 1.8"
+            position="-0.5 0.7 -2.4"
+            align="center"
+        ></a-text>
+
+        <a-text 
+            value="qtd. produzida" 
+            color="white" 
+            width="1.3"
+            scale="1.3 1.3 1.3" 
+            position="0.5 1 -2.4" 
+            align="center" 
         >
         </a-text>
-      </a-box>
 
-      <a-box
-        id="rightbox"
-        color="#50788a"
-        scale="0.8  0.2 0.3"
-        position="0.6 0.5 -3"
-        rotation="0 0 0"
-        maintenance-cursor
-        class="clickable"
-        raycaster="objects: .clickable; far: 10; showLine: true"
-        z-index="1"
-      >
-      </a-box>
+        <a-text 
+            id="qtdProdNum"
+            value="000"            
+            color="white" 
+            width="1.3"
+            scale="1.2 1.2 1.2" 
+            position="0.5 0.9 -2.4" 
+            align="center" 
+        >
+        </a-text>  
 
-      <a-box
-        id="leftbox"
-        color="#50788a"
-        scale="0.8  0.2 0.3"
-        position="-0.6 0.5 -3"
-        rotation="0 0 0"
-        status-cursor
-        class="clickable"
-        raycaster="objects: .clickable; far: 10; showLine: true"
-        z-index="1"
-      >
-      </a-box>
+        <a-text 
+            value="qtd" 
+            color="white" 
+            width="1.3"
+            scale="1.3 1.3 1.3" 
+            position="0 1 -2.4" 
+            align="center" 
+        >
+        </a-text>
 
-      <a-text
-        value="maintenance"
-        color="white"
-        width="1.3"
-        scale="1.8 1.8 1.8"
-        position="0.5 0.7 -2.4"
-        align="center"
-      >
-      </a-text>
+        <a-text 
+            value="op" 
+            color="white" 
+            width="1.3"
+            scale="1.3 1.3 1.3" 
+            position="-0.5 1 -2.4" 
+            align="center" 
+        >
+        </a-text>
+        
+        <a-text
+            value="INJ000" 
+            color="white" 
+            width="1.3"
+            scale="3 2.9 3" 
+            position="0 1.5 -2.4" 
+            align="center" 
+        >
+        </a-text>
 
-      <a-text
-        value="status"
-        color="white"
-        width="1.3"
-        scale="1.8 1.8 1.8"
-        position="-0.5 0.7 -2.4"
-        align="center"
-      >
-      </a-text>
+        <a-text
+            value="producao" 
+            color="white" 
+            width="1.3"
+            scale="2 2 2" 
+            position="0 1.4 -2.4" 
+            align="center" 
+        >
+        </a-text>
+
+
+<!-- GAUGES -->
+ 
+    <a-box 
+        id="blackbox" 
+        position="0 -0.23 -3"
+        color="#000" 
+        scale="2.8 1 0.2"
+        visible="false"
+    >
+    </a-box>
+
+    <!-- Gauge OEE -->
+    <a-entity 
+        id="gauge-OEE" 
+        position="0 -0.3 -2" 
+        scale="1.2 1.2 1.2"
+        visible="false"
+    >
+        <a-ring 
+            id="ring-OEE" 
+            color="blue" 
+            radius-inner="0.5" 
+            radius-outer="0.6" 
+            theta-start="0" 
+            theta-length="0"
+            position="0 0 -2" 
+            scale="1.2 1.2 1.2"    
+        ></a-ring>
+        <a-text 
+            id="text-OEE" 
+            value="OEE: 0%" 
+            position="-0.6 0.8 0" 
+            align="center"
+            color="white"
+            scale="0.3 0.3 0.3"
+        ></a-text>
+    </a-entity>
+
+    <!-- Gauge Disponibilidade -->
+    <a-entity 
+        id="gauge-Disponibilidade" 
+        position="0 -0.3 -2" 
+        scale="1.2 1.2 1.2"
+        visible="false"
+    >
+        <a-ring 
+            id="ring-Disponibilidade" 
+            color="orange" 
+            radius-inner="0.5" 
+            radius-outer="0.6" 
+            theta-start="0" 
+            theta-length="0"
+        ></a-ring>
+        <a-text
+            id="text-Disponibilidade" 
+            value="Disp: 0%" 
+            position="-0.3 0.8 0" 
+            align="center" 
+            color="white"
+            scale="0.3 0.3 0.3"
+        ></a-text>
+    </a-entity>
+
+    <!-- Gauge Performance -->
+    <a-entity 
+        id="gauge-Performance" 
+        position="0 -0.3 -2" 
+        scale="1.2 1.2 1.2"
+        visible="false"
+    >
+        <a-ring 
+            id="ring-Performance" 
+            color="green" 
+            radius-inner="0.5" 
+            radius-outer="0.6" 
+            theta-start="0" 
+            theta-length="0"
+        ></a-ring>
+        <a-text 
+            id="text-Performance" 
+            value="Perf: 0%" 
+            position="0 0.8 0" 
+            align="center" 
+            color="white"
+            scale="0.3 0.3 0.3"
+        ></a-text>
+    </a-entity>
+
+    <!-- Gauge Qualidade -->
+    <a-entity 
+        id="gauge-Qualidade"
+        position="0 -0.3 -2"
+        scale="1.2 1.2 1.2"
+        visible="false"
+        >
+        <a-ring 
+            id="ring-Qualidade" 
+            position="0 -0.23 -2"
+            scale="1.2 1.2 1.2"
+            color="yellow" 
+            radius-inner="0.5" 
+            radius-outer="0.6" 
+            theta-start="0" 
+            theta-length="0"
+        ></a-ring>
+        <a-text 
+            id="text-Qualidade" 
+            value="Qual: 0%" 
+            position="0.3 0.8 0" 
+            align="center" 
+            color="white"
+            scale="0.3 0.3 0.3"
+        ></a-text>
+    </a-entity>
+
     </a-scene>
+
+    <script>
+        navigator.mediaDevices
+            .getUserMedia({ video: true })
+            .then(() => {
+                initAR(); // Inicializa a AR
+                updateGauges(); // Atualiza os gauges com valores iniciais
+            })
+            .catch((err) => console.error("Permissão de câmera negada:", err));
+        </script>
 </body>
+
+<!-- <script>
+    // Função para inicializar os gauges com valores aleatórios
+    function initializeGauges() {
+        let oeeValue = getRandomInitialValue();
+        let dispValue = getRandomInitialValue();
+        let perfValue = getRandomInitialValue();
+        let qualValue = getRandomInitialValue();
+
+        // Atualiza os gauges com os valores iniciais
+        updateGauge(oeeValue, 'text-OEE', 'ring-OEE');
+        updateGauge(dispValue, 'text-Disponibilidade', 'ring-Disponibilidade');
+        updateGauge(perfValue, 'text-Performance', 'ring-Performance');
+        updateGauge(qualValue, 'text-Qualidade', 'ring-Qualidade');
+    }
+
+    // Função para exibir os gauges como um modelo 3D na tela
+    function showGauges() {
+        const gaugeGroup = document.getElementById('gauge-group');
+        gaugeGroup.setAttribute('visible', true);
+    }
+
+    // Função para atualizar os valores de todos os gauges de forma gradual
+    function randomUpdate() {
+        let oeeValue = parseInt(document.getElementById('text-OEE').getAttribute('value').split(': ')[1].replace('%', ''));
+        let dispValue = parseInt(document.getElementById('text-Disponibilidade').getAttribute('value').split(': ')[1].replace('%', ''));
+        let perfValue = parseInt(document.getElementById('text-Performance').getAttribute('value').split(': ')[1].replace('%', ''));
+        let qualValue = parseInt(document.getElementById('text-Qualidade').getAttribute('value').split(': ')[1].replace('%', ''));
+
+        oeeValue = getRandomValue(oeeValue);
+        dispValue = getRandomValue(dispValue);
+        perfValue = getRandomValue(perfValue);
+        qualValue = getRandomValue(qualValue);
+
+        updateGauge(oeeValue, 'text-OEE', 'ring-OEE'); updateGauge(dispValue, 'text-Disponibilidade', 'ring-Disponibilidade'); updateGauge(perfValue, 'text-Performance', 'ring-Performance'); updateGauge(qualValue, 'text-Qualidade', 'ring-Qualidade'); } 
+</script> -->
+
 </html>
+
+
