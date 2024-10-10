@@ -1,4 +1,5 @@
 # ARintelmes
+teste requisição CORS: https://cors-anywhere.herokuapp.com/corsdemo
 
 # AR com A-frame
 Projeto em realidade aumentada para exibir informações de máquina de forma rápida e interativa.
@@ -18,12 +19,28 @@ Projeto em realidade aumentada para exibir informações de máquina de forma r�
 - gerar qr code
 
 ## Tecnologias:
-
 - Javascript
 - HTML
 - A-FRAME
 - AR.js
 
+## Pastas
+
+### path
+É o caminho desenvolvido até a versão final.
+- main9 → aplicação sem câmera pegando direto da API
+- main8 → aplicação sem câmera fazendo uma requisição CORS temporária
+- main7 → aplicação com/sem câmera pegando direto da API
+- main6 → aplicação com/sem câmera fazendo uma requisição CORS temporária
+- main5 → atual código, aplicação com câmera fazendo uma requisição CORS temporária, com estrutura quase pronta
+
+### testes
+- comentado → código comentado
+- teste1 → fundo de foto
+- teste2 → teste com javascript para mudar o tamanho da grandbox para se adaptar ao alongamento do modo vr e assim não prejudicar a exibição sem camera inicial
+- teste3 → TESTANDO APLICAÇÃO COM O GAUGE não ta aparecendo os gauges o objetivo é aparecer os gauges
+- teste4 → TESTANDO APLICAÇÃO COM O GAUGE não ta aparecendo os gauges o objetivo é no botão status aparecer a blackbox com os gauges
+- testServer → teste para aplicar o proxy de segurança (axios, JSON)
 
 <!-- ## Bibliotecas:
 
