@@ -49,6 +49,29 @@
                 });
             },
         });
+
+// testando endpoint dos números
+
+// HORAS
+
+        AFRAME.registerComponent("random-hours", {
+            init: function () {
+                const hoursNum = document.getElementById("hours");
+
+                fetch("https://www.random.org/integers/?num=1&min=0&max=1000&col=1&base=10&format=plain&rnd=new")
+                    .then((response) => response.text())
+                    .then((data) => {
+                        const hours = data.trim(); // Remove espaços em branco
+                        hoursNum.setAttribute("value", hours); // Define o valor diretamente
+                    })
+                    .catch((error) => console.error("Erro ao conectar à API:", error));
+            },
+        });
+
+        // DEU CERTOOOOOO
+
+
+
     </script>
 
     <style>
@@ -134,11 +157,33 @@
 
         <a-text
             id="hours"
-            value="4 h" 
+            value="" 
             color="white" 
             width="1.3"
             scale="1 1 1" 
             position="-0.7 1.65 -2.4" 
+            align="center"
+            random-hours
+        >
+        </a-text>
+
+        <a-text
+            id="perf"
+            value="Perf 99.18%" 
+            color="white" 
+            width="1.3"
+            scale="1 1 1" 
+            position="0.7 1.65 -2.4" 
+            align="center" 
+        >
+        </a-text>
+        <a-text
+            id=""
+            value="IS-87" 
+            color="white" 
+            width="1.3"
+            scale="1 1 1" 
+            position="0.7 1.60 -2.4" 
             align="center" 
         >
         </a-text>
@@ -154,6 +199,7 @@
         </a-text>
 
         <a-text
+            id="statusMaq"
             value="producao" 
             color="white" 
             width="1.3"
@@ -163,7 +209,7 @@
         >
         </a-text>
         <a-text 
-            id="producaoNum"
+            id="statusNum"
             value="000"            
             color="white" 
             width="1.3"

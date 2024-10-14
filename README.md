@@ -40,6 +40,7 @@ Projeto em realidade aumentada para exibir informações de máquina de forma r�
 - teste2 → teste com javascript para mudar o tamanho da grandbox para se adaptar ao alongamento do modo vr e assim não prejudicar a exibição sem camera inicial
 - teste3 → TESTANDO APLICAÇÃO COM O GAUGE não ta aparecendo os gauges o objetivo é aparecer os gauges
 - teste4 → TESTANDO APLICAÇÃO COM O GAUGE não ta aparecendo os gauges o objetivo é no botão status aparecer a blackbox com os gauges
+- teste5 → TESTANDO ENDPOINTS, mas sem sucesso pois precisa-se de informações sobre a API, portanto, será a parte final.
 - testServer → teste para aplicar o proxy de segurança (axios, JSON)
 
 <!-- ## Bibliotecas:
@@ -49,3 +50,7 @@ Projeto em realidade aumentada para exibir informações de máquina de forma r�
 - npm config set strict-ssl false
 - npm install express axios
 - node proxy.js -->
+
+<!-- api numero
+fetch("https://www.random.org/integers/?num=1&min=0&max=1000&col=1&base=10&format=plain&rnd=new")
+ -->
