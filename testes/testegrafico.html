@@ -1,0 +1,59 @@
+
+<script>
+//  TESTE GRAFICO
+
+function createProgressGraph(maxProgressValue) {
+                let progress = 0; // Valor inicial de progresso
+                const progressBox = document.getElementById('progressBox');
+
+                function updateProgress() {
+                    if (progress < maxProgressValue) {
+                        progress += 0.1; // Incrementa o progresso
+                        progressBox.setAttribute('scale', `${progress} 0.1 0.1`); // Atualiza a escala
+                    }
+                }
+
+                const intervalId = setInterval(updateProgress, 1000);
+                return intervalId; // Retorna o ID do intervalo
+            }
+
+            // Requisita um número da API
+            fetch("https://www.random.org/integers/?num=1&min=0&max=100&col=1&base=10&format=plain&rnd=new")
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    const randomNumber = parseFloat(data.trim());
+                    const maxProgressValue = randomNumber / 100; // Converte para uma escala de 0 a 1
+                    createProgressGraph(maxProgressValue); // Inicializa o gráfico com o número da API
+                })
+                .catch(error => console.error("Erro ao conectar à API:", error));
+// FIM TESTE GRAFICO
+
+</script>
+
+
+<html>
+
+<!-- TESTE GRAFICO -->
+<a-entity id="taskGraph" position="0 1 -3">
+    <!-- Eixo X -->
+    <a-line 
+        start="-2 0 0" 
+        end="2 0 0" 
+        color="#777" 
+        line-width="2"
+    ></a-line>
+
+    <!-- Fundo do gráfico -->
+    <a-box position="0 0 0" color="#ddd" scale="1.6 0.1 0.1"></a-box> <!-- Cor de fundo -->
+
+    <!-- Gráfico de progresso -->
+    <a-box id="progressBox" position="-0.8 0 0" color="#4caf50" scale="0 0.1 0.1"></a-box> <!-- Cor do progresso -->
+</a-entity>
+<!-- FIM TESTE GRAFICO -->
+
+</html>

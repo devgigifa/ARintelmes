@@ -54,23 +54,180 @@
 
 // HORAS
 
-        AFRAME.registerComponent("random-hours", {
-            init: function () {
-                const hoursNum = document.getElementById("hours");
+AFRAME.registerComponent("random-hours", {
+    init: function () {
+        const hoursNum = document.getElementById("hours");
 
-                fetch("https://www.random.org/integers/?num=1&min=0&max=1000&col=1&base=10&format=plain&rnd=new")
+        fetch("https://www.random.org/integers/?num=1&min=0&max=150&col=1&base=10&format=plain&rnd=new")
+            .then((response) => response.text())
+            .then((data) => {
+                const hours = data.trim(); // Remove espaços em branco
+                const hoursConcat = `${hours} h`; // Adiciona "h" ao valor
+                hoursNum.setAttribute("value", hoursConcat); // Define o valor com "h"
+            })
+            .catch((error) => console.error("Erro ao conectar à API:", error));
+    },
+});
+
+
+        // DEU CERTOOOOOO
+// STATUS MAQUINA
+        AFRAME.registerComponent("random-progress", {
+            init: function () {
+                const statusNum = document.getElementById("statusNum");
+
+                fetch("https://www.random.org/integers/?num=1&min=0&max=100&col=1&base=10&format=plain&rnd=new")
                     .then((response) => response.text())
                     .then((data) => {
-                        const hours = data.trim(); // Remove espaços em branco
-                        hoursNum.setAttribute("value", hours); // Define o valor diretamente
+                        const progress = data.trim(); // Remove espaços em branco
+                        const progressConcat = `${progress} %`; // Adiciona "%" ao valor
+                        statusNum.setAttribute("value", progressConcat); // Define o valor com "%"
                     })
                     .catch((error) => console.error("Erro ao conectar à API:", error));
             },
         });
 
-        // DEU CERTOOOOOO
 
 
+// TC
+AFRAME.registerComponent("random-tc", {
+    init: function () {
+        const tcElement = document.getElementById("tcNum");
+
+        fetch("https://www.random.org/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new")
+            .then((response) => response.text())
+            .then((data) => {
+                const tcValue = data.trim(); // Remove espaços em branco
+                tcElement.setAttribute("value", tcValue); // Define o valor diretamente
+            })
+            .catch((error) => console.error("Erro ao conectar à API:", error));
+    },
+});
+
+// OP
+AFRAME.registerComponent("random-op", {
+    init: function () {
+        const opElement = document.getElementById("opNum");
+
+        fetch("https://www.random.org/integers/?num=1&min=0&max=9999999&col=1&base=10&format=plain&rnd=new")
+            .then((response) => response.text())
+            .then((data) => {
+                const opValue = data.trim(); // Remove espaços em branco
+                opElement.setAttribute("value", opValue); // Define o valor diretamente
+            })
+            .catch((error) => console.error("Erro ao conectar à API:", error));
+    },
+});
+
+// Quantidade de Números
+AFRAME.registerComponent("random-quantidade", {
+    init: function () {
+        const quantidadeElement = document.getElementById("qtdNum");
+
+        fetch("https://www.random.org/integers/?num=1&min=0&max=10000&col=1&base=10&format=plain&rnd=new")
+            .then((response) => response.text())
+            .then((data) => {
+                const quantidadeValue = data.trim(); // Remove espaços em branco
+                quantidadeElement.setAttribute("value", quantidadeValue); // Define o valor diretamente
+            })
+            .catch((error) => console.error("Erro ao conectar à API:", error));
+    },
+});
+
+// Quantidade de Produtos
+AFRAME.registerComponent("random-qtdprod", {
+    init: function () {
+        const quantidadeProdElement = document.getElementById("qtdProdNum");
+
+        fetch("https://www.random.org/integers/?num=1&min=0&max=1000&col=1&base=10&format=plain&rnd=new")
+            .then((response) => response.text())
+            .then((data) => {
+                const quantidadeProdValue = data.trim(); // Remove espaços em branco
+                quantidadeProdElement.setAttribute("value", quantidadeProdValue); // Define o valor diretamente
+            })
+            .catch((error) => console.error("Erro ao conectar à API:", error));
+    },
+});
+
+// Refugo
+AFRAME.registerComponent("random-refugo", {
+    init: function () {
+        const refugoElement = document.getElementById("refugoNum");
+
+        fetch("https://www.random.org/integers/?num=1&min=0&max=1000&col=1&base=10&format=plain&rnd=new")
+            .then((response) => response.text())
+            .then((data) => {
+                const refugoValue = data.trim(); // Remove espaços em branco
+                refugoElement.setAttribute("value", refugoValue); // Define o valor diretamente
+            })
+            .catch((error) => console.error("Erro ao conectar à API:", error));
+    },
+});
+
+// Quantidade Boa
+AFRAME.registerComponent("random-qtdboa", {
+    init: function () {
+        const quantidadeBoaElement = document.getElementById("qtdBoaNum");
+
+        fetch("https://www.random.org/integers/?num=1&min=0&max=1000&col=1&base=10&format=plain&rnd=new")
+            .then((response) => response.text())
+            .then((data) => {
+                const quantidadeBoaValue = data.trim(); // Remove espaços em branco
+                quantidadeBoaElement.setAttribute("value", quantidadeBoaValue); // Define o valor diretamente
+            })
+            .catch((error) => console.error("Erro ao conectar à API:", error));
+    },
+});
+
+// Perf
+AFRAME.registerComponent("random-perf", {
+    init: function () {
+        const perfElement = document.getElementById("perf");
+
+        fetch("https://www.random.org/integers/?num=1&min=0&max=100&col=1&base=10&format=plain&rnd=new")
+            .then((response) => response.text())
+            .then((data) => {
+                const perfValue = parseFloat(data.trim()); // Converte para número
+                const formPerfValue = perfValue.toFixed(2); // Formata para duas casas decimais
+                const perfConcat = `Perf ${formPerfValue}%`; // Adiciona "Perf" e "%"
+                perfElement.setAttribute("value", perfConcat); // Define o valor formatado
+            })
+            .catch((error) => console.error("Erro ao conectar à API:", error));
+    },
+});
+
+
+// statusMaq - retorna se está em produção, parada, manutenção
+/*
+AFRAME.registerComponent("random-maq", {
+    init: function () {
+        const wordText = document.getElementById("statusMaq");
+
+        fetch("https://random-word-api.herokuapp.com/word?number=1")
+            .then((response) => response.json()) // Altere para .json()
+            .then((data) => {
+                const word = data[0]; // A palavra está no primeiro índice
+                wordText.setAttribute("value", word); // Define o valor
+            })
+            .catch((error) => console.error("Erro ao conectar à API:", error));
+    },
+});
+*/
+
+        AFRAME.registerComponent("random-proxop", {
+            init: function () {
+                const proxOp = document.getElementById("proxOp");
+
+                fetch("https://www.random.org/integers/?num=1&min=0&max=999999&col=1&base=10&format=plain&rnd=new")
+                    .then((response) => response.text())
+                    .then((data) => {
+                        const proxOpValue = data.trim(); 
+                        const proxOpConcat = `Proxima OP: ${proxOpValue}`; 
+                        proxOp.setAttribute("value", proxOpConcat);
+                    })
+                    .catch((error) => console.error("Erro ao conectar à API:", error));
+            },
+        });
 
     </script>
 
@@ -122,9 +279,9 @@
             scale="0.8 0.2 0.3"
             position="0.6 0.5 -3"
             rotation="0 0 0"
-            maintenance-cursor
             class="clickable"
             raycaster="objects: .clickable; far: 10; showLine: true"
+            maintenance-cursor
         ></a-box>
 
         <a-box
@@ -133,16 +290,16 @@
             scale="0.8 0.2 0.3"
             position="-0.6 0.5 -3"
             rotation="0 0 0"
-            status-cursor
             class="clickable"
             raycaster="objects: .clickable; far: 10; showLine: true"
+            status-cursor
         ></a-box>
 
         <a-text
             value="maintenance"
             color="white"
             width="1.3"
-            scale="1.8 1.8 1.8"
+            scale="1.8 1.3 1.8"
             position="0.5 0.7 -2.4"
             align="center"
         ></a-text>
@@ -150,7 +307,7 @@
             value="status"
             color="white"
             width="1.3"
-            scale="1.8 1.8 1.8"
+            scale="1.8 1.3 1.8"
             position="-0.5 0.7 -2.4"
             align="center"
         ></a-text>
@@ -160,7 +317,7 @@
             value="" 
             color="white" 
             width="1.3"
-            scale="1 1 1" 
+            scale="1.2 0.7 1.2" 
             position="-0.7 1.65 -2.4" 
             align="center"
             random-hours
@@ -172,9 +329,9 @@
             value="Perf 99.18%" 
             color="white" 
             width="1.3"
-            scale="1 1 1" 
-            position="0.7 1.65 -2.4" 
-            align="center" 
+            scale="1 0.5 1" 
+            position="0.5 1.65 -2.4" 
+            random-perf
         >
         </a-text>
         <a-text
@@ -182,9 +339,8 @@
             value="IS-87" 
             color="white" 
             width="1.3"
-            scale="1 1 1" 
-            position="0.7 1.60 -2.4" 
-            align="center" 
+            scale="1 0.5 1" 
+            position="0.5 1.60 -2.4" 
         >
         </a-text>
 
@@ -192,167 +348,179 @@
             value="INJ000" 
             color="white" 
             width="1.3"
-            scale="3 3 3" 
-            position="0 1.55 -2.4" 
+            scale="3 1.8 3" 
+            position="0 1.57 -2.4" 
             align="center" 
         >
         </a-text>
 
         <a-text
             id="statusMaq"
-            value="producao" 
+            value="PRODUCAO" 
             color="white" 
             width="1.3"
-            scale="2 2 2" 
-            position="0 1.4 -2.4" 
-            align="center" 
+            scale="2.3 1 2.3" 
+            position="0 1.43 -2.4" 
+            align="center"
+            random-maq
         >
         </a-text>
         <a-text 
             id="statusNum"
-            value="000"            
             color="white" 
             width="1.3"
-            scale="1.2 1.2 1.2" 
+            scale="1.5 0.9 1.5" 
             position="0 1.3 -2.4" 
-            align="center" 
+            align="center"
+            random-progress
         >
         </a-text>  
 
         <a-entity line="start: -0.8 1.25 -2.4; end: 0.8 1.25 -2.4; color: white"></a-entity>
 
         <a-text 
-            value="tc" 
+            value="TC" 
             color="white" 
             width="1.3"
-            scale="1.3 1.3 1.3" 
-            position="-0.7 1.2 -2.4" 
+            scale="1.2 0.8 1.2" 
+            position="-0.75 1.2 -2.4" 
             align="center" 
         >
         </a-text>
         <a-text 
             id="tcNum"
-            value="000"            
             color="white" 
             width="1.3"
-            scale="1.2 1.2 1.2" 
-            position="-0.7 1.1 -2.4" 
-            align="center" 
+            scale="1.2 0.8 1.2" 
+            position="-0.75 1.15 -2.4" 
+            align="center"
+            random-tc
         >
         </a-text>  
 
         <a-text 
-            value="op" 
+            value="OP" 
             color="white" 
             width="1.3"
-            scale="1.3 1.3 1.3" 
+            scale="1.2 0.8 1.2" 
             position="-0.5 1.2 -2.4" 
             align="center" 
         >
         </a-text>
         <a-text 
             id="opNum"
-            value="000"            
             color="white" 
             width="1.3"
-            scale="1.2 1.2 1.2" 
-            position="-0.5 1.1 -2.4" 
-            align="center" 
+            scale="1.2 0.8 1.2" 
+            position="-0.5 1.15 -2.4" 
+            align="center"
+            random-op 
         >
         </a-text>  
 
 
         <a-text 
-            value="qtd" 
+            value="QTD" 
             color="white" 
             width="1.3"
-            scale="1.3 1.3 1.3" 
-            position="-0.3 1.2 -2.4" 
+            scale="1.2 0.8 1.2" 
+            position="-0.26 1.2 -2.4" 
             align="center" 
         >
         </a-text>
         <a-text 
             id="qtdNum"
-            value="000"            
             color="white" 
             width="1.3"
-            scale="1.2 1.2 1.2" 
-            position="-0.3 1.1 -2.4" 
-            align="center" 
+            scale="1.2 0.8 1.2" 
+            position="-0.26 1.15 -2.4" 
+            align="center"
+            random-quantidade
         >
         </a-text>  
 
         <a-text 
-            value="qtd prod" 
+            value="QTD PROD" 
             color="white" 
             width="1.3"
-            scale="1.3 1.3 1.3" 
-            position="0 1.2 -2.4" 
+            scale="1.2 0.8 1.2" 
+            position="0.01 1.2 -2.4" 
             align="center" 
         >
         </a-text>
         <a-text 
             id="qtdProdNum"
-            value="000"            
             color="white" 
             width="1.3"
-            scale="1.2 1.2 1.2" 
-            position="0 1.1 -2.4" 
-            align="center" 
+            scale="1.2 0.8 1.2" 
+            position="0.01 1.15 -2.4" 
+            align="center"
+            random-qtdprod
         >
         </a-text>  
 
 
         <a-text 
-            value="refugo" 
+            value="REFUGO" 
             color="white" 
             width="1.3"
-            scale="1.3 1.3 1.3" 
-            position="0.3 1.2 -2.4" 
+            scale="1.2 0.8 1.2" 
+            position="0.35 1.2 -2.4" 
             align="center" 
         >
         </a-text>
         <a-text 
             id="refugoNum"
-            value="000"            
             color="white" 
             width="1.3"
-            scale="1.2 1.2 1.2" 
-            position="0.3 1.1 -2.4" 
+            scale="1.2 0.8 1.2" 
+            position="0.35 1.15 -2.4" 
             align="center" 
+            random-refugo
         >
         </a-text>
 
         <a-text 
-            value="qtd boa" 
+            value="QTD BOA" 
             color="white" 
             width="1.3"
-            scale="1.3 1.3 1.3" 
-            position="0.6 1.2 -2.4" 
+            scale="1.2 0.8 1.2" 
+            position="0.65 1.2 -2.4" 
             align="center" 
         >
         </a-text>
         <a-text 
             id="qtdBoaNum"
-            value="000"            
             color="white" 
             width="1.3"
-            scale="1.2 1.2 1.2" 
-            position="0.6 1.1 -2.4" 
-            align="center" 
+            scale="1.2 0.8 1.2" 
+            position="0.65 1.15 -2.4" 
+            align="center"
+            random-qtdboa
         >
         </a-text>
 
-        <a-entity line="start: -0.8 1.05 -2.4; end: 0.8 1.05 -2.4; color: white"></a-entity>
+        <a-entity line="start: -0.8 1.1 -2.4; end: 0.8 1.1 -2.4; color: white"></a-entity>
 
         <a-text
             id="prodProduzindo"
             value="0000000 - produzindo produto" 
             color="white" 
             width="1.3"
-            scale="1.2 1.2 1.2" 
-            position="-0.8 0.95 -2.4" 
+            scale="1.2 0.8 1.2" 
+            position="-0.8 1.05 -2.4" 
             align="left" 
+        >
+        </a-text>
+
+        <a-text
+            id="proxOp"
+            color="white" 
+            width="1.3"
+            scale="1.2 0.8 1.2" 
+            position="-0.8 0.93 -2.4" 
+            align="left" 
+            random-proxop
         >
         </a-text> 
         
