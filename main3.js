@@ -1,4 +1,3 @@
-
 function initAR() {
     const scene = document.querySelector("#a-scene");
     scene.style.display = "block"; 
@@ -15,7 +14,7 @@ AFRAME.registerComponent("maintenance-cursor", {
             .then((data) => {
                 fact = data;
             })
-            .catch((error) => console.error("Erro ao conectar à API:", error));
+            .catch((error) => alert("Erro ao conectar à API:", error));
 
         el.addEventListener("click", function () {
             factText.setAttribute("value", fact);
@@ -25,22 +24,110 @@ AFRAME.registerComponent("maintenance-cursor", {
 
 AFRAME.registerComponent("status-cursor", {
     init: function () {
-        const el = this.el;
-        const factText = document.getElementById("fact-text");
-        let fact = "";
+        document.addEventListener('DOMContentLoaded', () => {
+            const gaugesGroup = document.getElementById("gauges-group");
+            gaugesGroup.setAttribute("visible", "false"); // Esconde os gauges no início
+            initializeGauges(); // Inicializa os gauges
+            simulateProductionBarChange();
 
-        fetch("https://cors-anywhere.herokuapp.com/http://numbersapi.com/random/trivia")
-            .then((response) => response.text())
-            .then((data) => {
-                fact = data;
-            })
-            .catch((error) => console.error("Erro ao conectar à API:", error));
-
-        el.addEventListener("click", function () {
-            factText.setAttribute("value", fact);
+            // Adiciona o evento de clique para o botão de Status
+            const statusButton = document.getElementById("status-button");
+            statusButton.addEventListener("click", function () {
+                console.log("Botão clicado!");
+                const isVisible = gaugesGroup.getAttribute("visible") === "true";
+                gaugesGroup.setAttribute("visible", !isVisible);
+                console.log("Gauges visibility:", !isVisible);
+            });
         });
     },
 });
+
+
+// FUNCTION GAUGES
+
+        // Função para gerar um valor aleatório entre dois números
+        function getRandomValue(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        // Atualiza os gauges gradualmente
+        function simulateGaugeChange(textId, ringId, currentValue) {
+            const newValue = getRandomValue(0, 100); // Gera um novo valor aleatório
+            let step = (newValue - currentValue) / 100; // Define o passo de mudança gradual
+
+            const interval = setInterval(() => {
+                if (Math.abs(newValue - currentValue) < Math.abs(step)) {
+                    currentValue = newValue; // Finaliza o valor
+                    clearInterval(interval);
+                } else {
+                    currentValue += step; // Atualiza gradualmente
+                }
+                updateGauge(currentValue, textId, ringId);
+            }, 50); // Atualiza a cada 50ms para uma transição suave
+        }
+
+        // Inicializa os gauges
+        function initializeGauges() {
+            let OEEValue = 100, DispValue = 100, PerfValue = 100, QualValue = 100;
+
+            setInterval(() => {
+                simulateGaugeChange('text-OEE', 'ring-OEE', OEEValue);
+                simulateGaugeChange('text-Disponibilidade', 'ring-Disponibilidade', DispValue);
+                simulateGaugeChange('text-Performance', 'ring-Performance', PerfValue);
+                simulateGaugeChange('text-Qualidade', 'ring-Qualidade', QualValue);
+            }, 5000); // A cada 5 segundos, simula uma nova atualização de todos os gauges
+        }
+
+        // Atualiza os gauges
+        function updateGauge(value, textId, ringId) {
+            const textEntity = document.getElementById(textId);
+            const ringEntity = document.getElementById(ringId);
+
+            if (textEntity && ringEntity) {
+                textEntity.setAttribute('value', textId.split('-')[1] + ': ' + Math.round(value) + '%');
+
+                const greenValue = Math.floor((value / 100) * 255);
+                const redValue = 255 - greenValue;
+                const color = `rgb(${redValue}, ${greenValue}, 0)`;
+                ringEntity.setAttribute('color', color);
+
+                const thetaLength = (value / 100) * 360;
+                ringEntity.setAttribute('theta-length', thetaLength);
+            } else {
+                alert("Element not found:", textId, ringId);
+            }
+        }
+
+// Funções que atualizam a barra de preenchimento para manter a escala correta
+function updateProductionBar(value) {
+    const barFill = document.getElementById("production-bar-fill");
+
+    if (barFill) {
+        // Atualiza a escala da barra de preenchimento
+        const fillScale = value / 100; // Ajusta a escala conforme o valor
+        barFill.setAttribute("scale", `${fillScale * 1.3} 0.1 0.1`); // Escala ajustada para o comprimento total
+        // Atualiza a posição da barra de preenchimento para que fique corretamente alinhada
+        barFill.setAttribute("position", `${(fillScale * 1.3 / 2) - 0.65} 0 0`); // Posiciona à frente do início
+    }
+}
+
+// Função de simular porcentagem similar a dos gauges
+function simulateProductionBarChange() {
+    let productionValue = 0;
+    let step = 1; // Incremento para o preenchimento
+
+    const interval = setInterval(() => {
+        if (productionValue >= 100) {
+            productionValue = 0; // Reinicia a barra após chegar a 100%
+        } else {
+            productionValue += step; // Atualiza gradualmente
+        }
+        updateProductionBar(productionValue);
+    }, 100); // Atualiza a cada 100ms
+}
+
+
+
 
 // testando endpoint dos números
 
@@ -57,7 +144,7 @@ fetch("https://www.random.org/integers/?num=1&min=0&max=150&col=1&base=10&format
         const hoursConcat = `${hours} h`; // Adiciona "h" ao valor
         hoursNum.setAttribute("value", hoursConcat); // Define o valor com "h"
     })
-    .catch((error) => console.error("Erro ao conectar à API:", error));
+    .catch((error) => alert("Erro ao conectar à API:", error));
 },
 });
 
@@ -75,7 +162,7 @@ AFRAME.registerComponent("random-progress", {
                 const progressConcat = `${progress} %`; // Adiciona "%" ao valor
                 statusNum.setAttribute("value", progressConcat); // Define o valor com "%"
             })
-            .catch((error) => console.error("Erro ao conectar à API:", error));
+            .catch((error) => alert("Erro ao conectar à API:", error));
     },
 });
 
@@ -92,7 +179,7 @@ fetch("https://www.random.org/integers/?num=1&min=1&max=100&col=1&base=10&format
         const tcValue = data.trim(); // Remove espaços em branco
         tcElement.setAttribute("value", tcValue); // Define o valor diretamente
     })
-    .catch((error) => console.error("Erro ao conectar à API:", error));
+    .catch((error) => alert("Erro ao conectar à API:", error));
 },
 });
 
@@ -107,7 +194,7 @@ fetch("https://www.random.org/integers/?num=1&min=0&max=9999999&col=1&base=10&fo
         const opValue = data.trim(); // Remove espaços em branco
         opElement.setAttribute("value", opValue); // Define o valor diretamente
     })
-    .catch((error) => console.error("Erro ao conectar à API:", error));
+    .catch((error) => alert("Erro ao conectar à API:", error));
 },
 });
 
@@ -122,7 +209,7 @@ fetch("https://www.random.org/integers/?num=1&min=0&max=10000&col=1&base=10&form
         const quantidadeValue = data.trim(); // Remove espaços em branco
         quantidadeElement.setAttribute("value", quantidadeValue); // Define o valor diretamente
     })
-    .catch((error) => console.error("Erro ao conectar à API:", error));
+    .catch((error) => alert("Erro ao conectar à API:", error));
 },
 });
 
@@ -137,7 +224,7 @@ fetch("https://www.random.org/integers/?num=1&min=0&max=1000&col=1&base=10&forma
         const quantidadeProdValue = data.trim(); // Remove espaços em branco
         quantidadeProdElement.setAttribute("value", quantidadeProdValue); // Define o valor diretamente
     })
-    .catch((error) => console.error("Erro ao conectar à API:", error));
+    .catch((error) => alert("Erro ao conectar à API:", error));
 },
 });
 
@@ -152,7 +239,7 @@ fetch("https://www.random.org/integers/?num=1&min=0&max=1000&col=1&base=10&forma
         const refugoValue = data.trim(); // Remove espaços em branco
         refugoElement.setAttribute("value", refugoValue); // Define o valor diretamente
     })
-    .catch((error) => console.error("Erro ao conectar à API:", error));
+    .catch((error) => alert("Erro ao conectar à API:", error));
 },
 });
 
@@ -167,7 +254,7 @@ fetch("https://www.random.org/integers/?num=1&min=0&max=1000&col=1&base=10&forma
         const quantidadeBoaValue = data.trim(); // Remove espaços em branco
         quantidadeBoaElement.setAttribute("value", quantidadeBoaValue); // Define o valor diretamente
     })
-    .catch((error) => console.error("Erro ao conectar à API:", error));
+    .catch((error) => alert("Erro ao conectar à API:", error));
 },
 });
 
@@ -184,7 +271,7 @@ fetch("https://www.random.org/integers/?num=1&min=0&max=100&col=1&base=10&format
         const perfConcat = `Perf ${formPerfValue}%`; // Adiciona "Perf" e "%"
         perfElement.setAttribute("value", perfConcat); // Define o valor formatado
     })
-    .catch((error) => console.error("Erro ao conectar à API:", error));
+    .catch((error) => alert("Erro ao conectar à API:", error));
 },
 });
 
@@ -201,7 +288,7 @@ fetch("https://random-word-api.herokuapp.com/word?number=1")
         const word = data[0]; // A palavra está no primeiro índice
         wordText.setAttribute("value", word); // Define o valor
     })
-    .catch((error) => console.error("Erro ao conectar à API:", error));
+    .catch((error) => alert("Erro ao conectar à API:", error));
 },
 });
 */
@@ -217,6 +304,6 @@ AFRAME.registerComponent("random-proxop", {
                 const proxOpConcat = `Proxima OP: ${proxOpValue}`; 
                 proxOp.setAttribute("value", proxOpConcat);
             })
-            .catch((error) => console.error("Erro ao conectar à API:", error));
+            .catch((error) => alert("Erro ao conectar à API:", error));
     },
 });

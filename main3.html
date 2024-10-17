@@ -6,7 +6,7 @@
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     
-    <script src="main4.js"></script>
+    <script src="main3.js"></script>
 
     <style>
         #a-scene {
@@ -62,7 +62,7 @@
         ></a-box>
 
         <a-box
-            id="leftbox"
+            id="status-button"
             color="#50788a"
             scale="0.8 0.2 0.3"
             position="-0.6 0.5 -3"
@@ -132,16 +132,35 @@
         </a-text>
 
         <a-text
-            id="statusMaq"
-            value="PRODUCAO" 
-            color="white" 
-            width="1.3"
-            scale="2.3 1 2.3" 
-            position="0 1.43 -2.4" 
-            align="center"
-            random-maq
-        >
-        </a-text>
+        id="statusMaq"
+        value="PRODUCAO" 
+        color="white" 
+        width="1.3"
+        scale="2.3 1 2.3" 
+        position="0 1.43 -2" 
+        align="center"
+        random-maq
+    >
+    </a-text>
+    
+        <!-- Barra de Produção -->
+        <a-entity position="0 1.43 -2.2">
+            <a-box 
+                position="0 0 0" 
+                scale="1.3 0.1 0.1"  
+                color="lightgreen" 
+                id="production-bar-background" 
+                opacity="0.5"
+            ></a-box>
+            <a-box 
+                position="0 0 0"  
+                scale="0 0.1 0.1"  
+                color="darkgreen" 
+                id="production-bar-fill"
+            ></a-box>
+        </a-entity>
+
+
         <a-text 
             id="statusNum"
             color="white" 
@@ -300,14 +319,107 @@
             random-proxop
         >
         </a-text> 
-        
-    </a-scene>
+
+    <!-- GAUGES -->
+    <a-entity 
+        id="gauges-group" 
+        visible="false"
+    > <!-- Inicialmente invisível -->
+        <a-entity 
+            id="gauge-OEE" 
+            position="-1.1 0.2 -2.4"  
+            scale="0.35 0.35 0.35"  
+        >
+            <a-ring 
+                id="ring-OEE" 
+                color="blue" 
+                radius-inner="0.35" 
+                radius-outer="0.45"  
+                theta-start="0" 
+                theta-length="0"
+            ></a-ring>
+            <a-text 
+                id="text-OEE" 
+                value="OEE: 100%" 
+                position="0 0.6 0" 
+                align="center" 
+                color="white"
+            ></a-text>
+        </a-entity>
+
+        <a-entity 
+            id="gauge-Disponibilidade" 
+            position="-0.4 0.2 -2.4"  
+            scale="0.35 0.35 0.35"  
+        >
+            <a-ring 
+                id="ring-Disponibilidade" 
+                color="orange" 
+                radius-inner="0.35" 
+                radius-outer="0.45"  
+                theta-start="0" 
+                theta-length="0"
+            ></a-ring>
+            <a-text 
+                id="text-Disponibilidade" 
+                value="Disp: 100%" 
+                position="0 0.6 0" 
+                align="center" 
+                color="white"
+            ></a-text>
+        </a-entity>
+
+        <a-entity 
+            id="gauge-Performance" 
+            position="0.4 0.2 -2.4"  
+            scale="0.35 0.35 0.35"  
+        >
+            <a-ring 
+                id="ring-Performance" 
+                color="green" 
+                radius-inner="0.35" 
+                radius-outer="0.45"  
+                theta-start="0" 
+                theta-length="0"
+            ></a-ring>
+            <a-text 
+                id="text-Performance" 
+                value="Perf: 100%" 
+                position="0 0.6 0" 
+                align="center" 
+                color="white"
+            ></a-text>
+        </a-entity>
+
+        <a-entity 
+            id="gauge-Qualidade" 
+            position="1.1 0.2 -2.4"  
+            scale="0.35 0.35 0.35"  
+        >
+            <a-ring 
+                id="ring-Qualidade" 
+                color="yellow" 
+                radius-inner="0.35" 
+                radius-outer="0.45"  
+                theta-start="0" 
+                theta-length="0"
+            ></a-ring>
+            <a-text 
+                id="text-Qualidade" 
+                value="Qual: 100%" 
+                position="0 0.6 0" 
+                align="center" 
+                color="white"
+            ></a-text>
+        </a-entity>
+    </a-entity>
+</a-scene>
 
     <script>
         navigator.mediaDevices
             .getUserMedia({ video: true })
             .then(initAR)
-            .catch((err) => console.error("Permissão de câmera negada:", err));
+            .catch((err) => alert("Permissão de câmera negada:", err));
     </script>
 </body>
 </html>

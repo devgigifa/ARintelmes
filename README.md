@@ -33,6 +33,7 @@ Projeto em realidade aumentada para exibir informações de máquina de forma r�
 - main7 → aplicação com/sem câmera pegando direto da API
 - main6 → aplicação com/sem câmera fazendo uma requisição CORS temporária
 - main5 → atual código, aplicação com câmera fazendo uma requisição CORS temporária, com estrutura quase pronta
+- main4 → aplicação com câmera fazendo requisições, com endpoints e formatação dos elementos ajustada
 
 ### testes
 - comentado → código comentado
