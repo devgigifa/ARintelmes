@@ -14,7 +14,7 @@ Projeto em realidade aumentada para exibir informações de máquina de forma r�
 - ao clicar em maintenance, aparecerá as informações de manutenção da máquina direto da API
 - conectar a aplicação com a API
 - transformar as informações da máquina em realidade aumentada
-- armazena no glitch cada um
+- testes no glitch
 - criar link pro AR de cada máquina
 - gerar qr code
 
