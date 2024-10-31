@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Main 4</title>
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    
+    <script src="main4.js"></script>
+
+    <style>
+        #a-scene {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <a-scene
+        id="a-scene"
+        embedded arjs="sourceType: webcam; debugUIEnabled: false;"
+        camera="position: 0 1.6 0; fov: 80;" init-ar
+    >
+        <a-entity
+            cursor="rayOrigin: mouse;"
+            raycaster="objects: .clickable; far: 10; showLine: true"
+        ></a-entity>
+
+        <a-box
+            id="grandbox"
+            position="0 1.25 -3"
+            rotation="0 0 0"
+            color="#00a335"
+            scale="2 1 0.5"
+        >
+            <a-text
+                id="fact-text"
+                value=""
+                color="white"
+                scale="1.8 2 1"
+                position="0 -1 1"
+                align="center"
+                width="0.5"
+            ></a-text>
+        </a-box>
+
+        <a-box
+            id="rightbox"
+            color="#50788a"
+            scale="0.8 0.2 0.3"
+            position="0.6 0.5 -3"
+            rotation="0 0 0"
+            class="clickable"
+            raycaster="objects: .clickable; far: 10; showLine: true"
+            maintenance-cursor
+        ></a-box>
+
+        <a-box
+            id="status-button"
+            color="#50788a"
+            scale="0.8 0.2 0.3"
+            position="-0.6 0.5 -3"
+            rotation="0 0 0"
+            class="clickable"
+            raycaster="objects: .clickable; far: 10; showLine: true"
+            status-cursor
+        ></a-box>
+
+        <a-text
+            value="manutencao"
+            color="white"
+            width="1.3"
+            scale="1.8 1.3 1.8"
+            position="0.5 0.7 -2.4"
+            align="center"
+        ></a-text>
+    
+        <a-text
+            value="status"
+            color="white"
+            width="1.3"
+            scale="1.8 1.3 1.8"
+            position="-0.5 0.7 -2.4"
+            align="center"
+        ></a-text>
+
+        <a-text
+            id="hours"
+            value="" 
+            color="white" 
+            width="1.3"
+            scale="1.2 0.7 1.2" 
+            position="-0.7 1.65 -2.4" 
+            align="center"
+            random-hours
+        ></a-text>
+
+        <a-text
+            id="perf"
+            value="Perf 99.18%" 
+            color="white" 
+            width="1.3"
+            scale="1 0.5 1" 
+            position="0.5 1.65 -2.4" 
+            random-perf
+        ></a-text>
+        <a-text
+            id=""
+            value="IS-87" 
+            color="white" 
+            width="1.3"
+            scale="1 0.5 1" 
+            position="0.5 1.60 -2.4" 
+        ></a-text>
+
+        <a-text
+            value="INJ000" 
+            color="white" 
+            width="1.3"
+            scale="3 1.8 3" 
+            position="0 1.57 -2.4" 
+            align="center" 
+        ></a-text>
+
+        <a-text
+            id="statusMaq"
+            value="PRODUCAO" 
+            color="white" 
+            width="1.3"
+            scale="2.3 1 2.3" 
+            position="0 1.43 -2" 
+            align="center"
+            random-maq
+        ></a-text>
+    
+        <!-- Barra de Produção -->
+        <a-entity position="0 1.43 -2.2">
+            <!-- <a-box 
+                position="0 0 0" 
+                scale="1.3 0.1 0.1"  
+                color="lightgreen" 
+                id="production-bar-background" 
+                opacity="0.5"
+            ></a-box> -->
+            <a-box 
+                position="0 0 0"  
+                scale="0 0.1 0.1"  
+                color="darkgreen" 
+                id="production-bar-fill"
+            ></a-box>
+        </a-entity>
+
+
+        <a-text 
+            id="statusNum"
+            color="white" 
+            width="1.3"
+            scale="1.5 0.9 1.5" 
+            position="0 1.3 -2.4" 
+            align="center"
+            random-progress
+        ></a-text>  
+
+        <a-entity line="start: -0.8 1.25 -2.4; end: 0.8 1.25 -2.4; color: white"></a-entity>
+
+        <a-text 
+            value="TC" 
+            color="white" 
+            width="1.3"
+            scale="1.2 0.8 1.2" 
+            position="-0.75 1.2 -2.4" 
+            align="center" 
+        ></a-text>
+        <a-text 
+            id="tcNum"
+            color="white" 
+            width="1.3"
+            scale="1.2 0.8 1.2" 
+            position="-0.75 1.15 -2.4" 
+            align="center"
+            random-tc
+        ></a-text>  
+
+        <a-text 
+            value="OP" 
+            color="white" 
+            width="1.3"
+            scale="1.2 0.8 1.2" 
+            position="-0.5 1.2 -2.4" 
+            align="center" 
+        ></a-text>
+        <a-text 
+            id="opNum"
+            color="white" 
+            width="1.3"
+            scale="1.2 0.8 1.2" 
+            position="-0.5 1.15 -2.4" 
+            align="center"
+            random-op 
+        ></a-text>  
+
+
+        <a-text 
+            value="QTD" 
+            color="white" 
+            width="1.3"
+            scale="1.2 0.8 1.2" 
+            position="-0.26 1.2 -2.4" 
+            align="center" 
+        ></a-text>
+        <a-text 
+            id="qtdNum"
+            color="white" 
+            width="1.3"
+            scale="1.2 0.8 1.2" 
+            position="-0.26 1.15 -2.4" 
+            align="center"
+            random-quantidade
+        ></a-text>  
+
+        <a-text 
+            value="QTD PROD" 
+            color="white" 
+            width="1.3"
+            scale="1.2 0.8 1.2" 
+            position="0.01 1.2 -2.4" 
+            align="center" 
+        ></a-text>
+        <a-text 
+            id="qtdProdNum"
+            color="white" 
+            width="1.3"
+            scale="1.2 0.8 1.2" 
+            position="0.01 1.15 -2.4" 
+            align="center"
+            random-qtdprod
+        ></a-text>  
+
+        <a-text 
+            value="REFUGO" 
+            color="white" 
+            width="1.3"
+            scale="1.2 0.8 1.2" 
+            position="0.35 1.2 -2.4" 
+            align="center" 
+        ></a-text>
+        <a-text 
+            id="refugoNum"
+            color="white" 
+            width="1.3"
+            scale="1.2 0.8 1.2" 
+            position="0.35 1.15 -2.4" 
+            align="center" 
+            random-refugo
+        ></a-text>
+
+        <a-text 
+            value="QTD BOA" 
+            color="white" 
+            width="1.3"
+            scale="1.2 0.8 1.2" 
+            position="0.65 1.2 -2.4" 
+            align="center" 
+        ></a-text>
+        <a-text 
+            id="qtdBoaNum"
+            color="white" 
+            width="1.3"
+            scale="1.2 0.8 1.2" 
+            position="0.65 1.15 -2.4" 
+            align="center"
+            random-qtdboa
+        ></a-text>
+
+        <a-entity line="start: -0.8 1.1 -2.4; end: 0.8 1.1 -2.4; color: white"></a-entity>
+
+        <a-text
+            id="prodProduzindo"
+            value="0000000 - produzindo produto" 
+            color="white" 
+            width="1.3"
+            scale="1.2 0.8 1.2" 
+            position="-0.8 1.05 -2.4" 
+            align="left" 
+        ></a-text>
+
+        <a-text
+            id="proxOp"
+            color="white" 
+            width="1.3"
+            scale="1.2 0.8 1.2" 
+            position="-0.8 0.93 -2.4" 
+            align="left" 
+            random-proxop
+        ></a-text> 
+
+    <!-- GAUGES -->
+    <a-entity 
+        id="gauges-group" 
+        visible="false"
+    > <!-- Inicialmente invisível -->
+        <a-entity 
+            id="gauge-OEE" 
+            position="-1.1 0.2 -2.4"  
+            scale="0.35 0.35 0.35"  
+        >
+            <a-ring 
+                id="ring-OEE" 
+                color="blue" 
+                radius-inner="0.35" 
+                radius-outer="0.45"  
+                theta-start="0" 
+                theta-length="0"
+            ></a-ring>
+            <a-text 
+                id="text-OEE" 
+                value="OEE: 100%" 
+                position="0 0.6 0" 
+                align="center" 
+                color="white"
+            ></a-text>
+        </a-entity>
+
+        <a-entity 
+            id="gauge-Disponibilidade" 
+            position="-0.4 0.2 -2.4"  
+            scale="0.35 0.35 0.35"  
+        >
+            <a-ring 
+                id="ring-Disponibilidade" 
+                color="orange" 
+                radius-inner="0.35" 
+                radius-outer="0.45"  
+                theta-start="0" 
+                theta-length="0"
+            ></a-ring>
+            <a-text 
+                id="text-Disponibilidade" 
+                value="Disp: 100%" 
+                position="0 0.6 0" 
+                align="center" 
+                color="white"
+            ></a-text>
+        </a-entity>
+
+        <a-entity 
+            id="gauge-Performance" 
+            position="0.4 0.2 -2.4"  
+            scale="0.35 0.35 0.35"  
+        >
+            <a-ring 
+                id="ring-Performance" 
+                color="green" 
+                radius-inner="0.35" 
+                radius-outer="0.45"  
+                theta-start="0" 
+                theta-length="0"
+            ></a-ring>
+            <a-text 
+                id="text-Performance" 
+                value="Perf: 100%" 
+                position="0 0.6 0" 
+                align="center" 
+                color="white"
+            ></a-text>
+        </a-entity>
+
+        <a-entity 
+            id="gauge-Qualidade" 
+            position="1.1 0.2 -2.4"  
+            scale="0.35 0.35 0.35"  
+        >
+            <a-ring 
+                id="ring-Qualidade" 
+                color="yellow" 
+                radius-inner="0.35" 
+                radius-outer="0.45"  
+                theta-start="0" 
+                theta-length="0"
+            ></a-ring>
+            <a-text 
+                id="text-Qualidade" 
+                value="Qual: 100%" 
+                position="0 0.6 0" 
+                align="center" 
+                color="white"
+            ></a-text>
+        </a-entity>
+    </a-entity>
+</a-scene>
+
+    <script>
+        navigator.mediaDevices
+            .getUserMedia({ video: true })
+            .then(initAR)
+            .catch((err) => alert("Permissão de câmera negada:", err));
+    </script>
+</body>
+</html>
