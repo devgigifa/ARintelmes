@@ -1,4 +1,3 @@
-
 <!-- 
 atual versão main4 para edição 
 IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
@@ -15,58 +14,67 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
     
     <script>
 
-        function initAR() {
+        async function initAR() {
             const scene = document.querySelector("#a-scene");
             scene.style.display = "block"; 
-        }
 
-        const components = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "nextop", "rescode", "itemtool", "item"];
-        const qrCodeResponse = 'D0:EF:76:45:ED:DF'
+            const components = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "nextop", "rescode", "itemtool", "item"];
+            const qrCodeResponse = 'D0:EF:76:45:ED:DF';
 
             if (qrCodeResponse) {
-                const intelmountAPIResponse = await fetch(`https://intelmount.apps.intelbras.com.br/v1/resources/mount?mac=${qrCodeResponse}`)
+                try {
+                    const intelmountAPIResponse = await fetch(`https://intelmount.apps.intelbras.com.br/v1/resources/mount?mac=${qrCodeResponse}`);
+                    if (intelmountAPIResponse.ok) {
+                        const data = await intelmountAPIResponse.json();
+                        console.log(data?.data?.[0].code, data?.data[0]?.orders?.currents[0]?.operationId);
         
-                if (intelmountAPIResponse) {
-                    const data = await intelmountAPIResponse?.json();
-                    console.log(data?.data?.[0].code, data?.data[0]?.orders?.currents[0]?.operationId)
-                    const machineDetails = {
-                        cycletime: data?.data[0]?.orders?.currents[0]?.item?.factor,
-                        operationcode: data?.data[0]?.orders?.currents[0]?.operationId,
-                        quantity: data?.data[0]?.orders?.currents[0]?.production?.meta,
-                        quantityprod: data?.data[0]?.orders?.currents[0]?.production?.current,
-                        scrapquantity: data?.data[0]?.orders?.currents[0]?.production?.refuge,
-                        goodquantity: data?.data[0]?.orders?.currents[0]?.production?.current - data?.data[0]?.orders?.currents[0]?.production?.refuge,
-                        perf: data?.data[0]?.orders?.currents[0]?.perf,
-                        nextop: "5607040-2",
-                        rescode: data?.data?.[0].code,
-                        itemtool: data?.data[0]?.orders?.currents[0]?.item?.tool,
-                        item: `${data?.data[0]?.orders?.currents[0]?.item?.code} - ${data?.data[0]?.orders?.currents[0]?.item?.name}`
-                    }
-                    if (data) {
+                        const machineDetails = {
+                            cycletime: (data?.data[0]?.orders?.currents[0]?.item?.factor ?? ''),
+                            operationcode: (data?.data[0]?.orders?.currents[0]?.operationId ?? ''),
+                            quantity: (data?.data[0]?.orders?.currents[0]?.production?.meta ?? 0),
+                            quantityprod: (data?.data[0]?.orders?.currents[0]?.production?.current ?? 0),
+                            scrapquantity: (data?.data[0]?.orders?.currents[0]?.production?.refuge ?? 0),
+                            goodquantity: (
+                                (data?.data[0]?.orders?.currents[0]?.production?.current ?? 0) - 
+                                (data?.data[0]?.orders?.currents[0]?.production?.refuge ?? 0)
+                            ),
+                            perf: `perf: ${(data?.data[0]?.orders?.currents[0]?.perf ?? 0).toFixed(2)}%`,
+                            nextop: "5607040-2",
+                            rescode: (data?.data?.[0].code ?? "undefined"),
+                            itemtool: (data?.data[0]?.orders?.currents[0]?.item?.tool ?? "undefined"),
+                            item: `${(data?.data[0]?.orders?.currents[0]?.item?.code ?? "00000")} - ${(data?.data[0]?.orders?.currents[0]?.item?.name ?? "undefined")}`
+                        }
+
                         for (const component of components) {
                             const element = document.getElementById(component);
-                            element.setAttribute("value", machineDetails[component]);
+                            if (element) {
+                                element.setAttribute("value", machineDetails[component]);
+                            }
                         }
                     }
+                } catch (error) {
+                    console.error("Failed to fetch data:", error);
                 }
             }
+        }
 
-        // FUNCTION GAUGES
-
-        // mudança do carregamento dos gauges, agora sem botão e carregar automático
-        // pra carregar os gauges
+        // Carrega os gauges quando o DOM está pronto
         document.addEventListener('DOMContentLoaded', () => {
             const gaugesGroup = document.getElementById("gauges-group");
             gaugesGroup.setAttribute("visible", "true"); 
             initGauges();
             productionBar();
+            initAR(); // Inicia a função de AR após carregar os gauges
         });
+
+
+        // FUNCTION GAUGES
 
         // Função para gerar um valor aleatório entre dois números
         function getRandomValue(min, max) {
             return Math.random() * (max - min) + min;
         }
-        
+
         // Atualiza os gauges gradualmente
         function simulateGaugeChange(textId, ringId, currentValue) {
             const newValue = getRandomValue(0, 100);
@@ -111,7 +119,7 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
                 const thetaLength = (value / 100) * 360;
                 ringEntity.setAttribute('theta-length', thetaLength);
             } else {
-                alert("Element not found:", textId, ringId);
+                console.warn("Element not found:", textId, ringId);
             }
         }
 
@@ -120,27 +128,24 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
             const barFill = document.getElementById("production-bar-fill");
 
             if (barFill) {
-                // Atualiza a escala da barra de preenchimento
-                const fillScale = value / 100; // Ajusta a escala conforme o valor
-                barFill.setAttribute("scale", `${fillScale * 1.3} 0.1 0.1`); // Escala ajustada para o comprimento total
-                // Atualiza a posição da barra de preenchimento para que fique corretamente alinhada
-                barFill.setAttribute("position", `${(fillScale * 1.3 / 2) - 0.65} 0 0`); // Posiciona à frente do início
+                const fillScale = value / 100; 
+                barFill.setAttribute("scale", `${fillScale * 1.3} 0.1 0.1`); 
+                barFill.setAttribute("position", `${(fillScale * 1.3 / 2) - 0.65} 0 0`); 
             }
         }
 
-        // Função de simular porcentagem similar a dos gauges
         function productionBar() {
             let productionValue = 0;
-            let step = 1; // Incremento para o preenchimento
+            let step = 1; 
 
             const interval = setInterval(() => {
                 if (productionValue >= 100) {
-                    productionValue = 0; // Reinicia a barra após chegar a 100%
+                    productionValue = 0;
                 } else {
-                    productionValue += step; // Atualiza gradualmente
+                    productionValue += step;
                 }
                 updateProductionBar(productionValue);
-            }, 100); // Atualiza a cada 100ms
+            }, 100); 
         }
 
     </script>
@@ -162,7 +167,7 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
         id="a-scene"
         embedded
         arjs="sourceType: webcam; debugUIEnabled: false;"
-        camera="position: 0 1.6 0; fov: 80;" init-ar initGauges productionBar
+        camera="position: 0 1.6 0; fov: 80; near: 0.1"   init-ar initGauges productionBar
     >
 
         <a-box
@@ -171,17 +176,19 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
             rotation="0 0 0"
             color="#00a335"
             scale="2 1 0.5"
+            frustumCulled="false"
         >
         </a-box>
 
         <a-text
             id="hours"
-            value="" 
+            value="4 h" 
             color="white" 
             width="1.3"
             scale="1.2 0.7 1.2" 
             position="-0.7 1.65 -2.4" 
             align="center"
+            frustumCulled="false"
             random-hours
         >
         </a-text>
@@ -192,27 +199,28 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
             color="white" 
             width="1.3"
             scale="1 0.5 1" 
-            position="0.5 1.65 -2.4" 
-            perf
+            position="0.5 1.65 -2.4"
+            frustumCulled="false"
         >
         </a-text>
         <a-text
-            id=""
-            value="IS-87" 
+            id="itemtool"
             color="white" 
             width="1.3"
             scale="1 0.5 1" 
-            position="0.5 1.60 -2.4" 
+            position="0.5 1.60 -2.4"
+            frustumCulled="false"
         >
         </a-text>
 
         <a-text
-            value="INJ000" 
+            id="rescode"
             color="white" 
             width="1.3"
             scale="3 1.8 3" 
             position="0 1.57 -2.4" 
-            align="center" 
+            align="center"
+            frustumCulled="false"        
         >
         </a-text>
 
@@ -224,12 +232,13 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
         scale="2.3 1 2.3" 
         position="0 1.43 -2" 
         align="center"
+        frustumCulled="false"
         random-maq
     >
     </a-text>
     
         <!-- Barra de Produção -->
-        <a-entity position="0 1.43 -2.2">
+        <a-entity position="0 1.43 -2.2" frustumCulled="false">
             <a-box 
                 position="0 0 0"  
                 scale="0 0.1 0.1"  
@@ -240,11 +249,13 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
 
         <a-text 
             id="statusNum"
+            value="33%"
             color="white" 
             width="1.3"
             scale="1.5 0.9 1.5" 
             position="0 1.3 -2.4" 
             align="center"
+            frustumCulled="false"
             random-progress
         >
         </a-text>  
@@ -257,7 +268,8 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
             width="1.3"
             scale="1.2 0.8 1.2" 
             position="-0.75 1.2 -2.4" 
-            align="center" 
+            align="center"
+            frustumCulled="false"
         >
         </a-text>
         <a-text 
@@ -267,7 +279,7 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
             scale="1.2 0.8 1.2" 
             position="-0.75 1.15 -2.4" 
             align="center"
-            cycletime
+            frustumCulled="false"
         >
         </a-text>  
 
@@ -276,8 +288,9 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
             color="white" 
             width="1.3"
             scale="1.2 0.8 1.2" 
-            position="-0.5 1.2 -2.4" 
-            align="center" 
+            position="-0.45 1.2 -2.4" 
+            align="center"
+            frustumCulled="false"
         >
         </a-text>
         <a-text 
@@ -285,9 +298,9 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
             color="white" 
             width="1.3"
             scale="1.2 0.8 1.2" 
-            position="-0.5 1.15 -2.4" 
+            position="-0.45 1.15 -2.4" 
             align="center"
-            operationcode        
+            frustumCulled="false"
         >
         </a-text>  
 
@@ -296,8 +309,9 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
             color="white" 
             width="1.3"
             scale="1.2 0.8 1.2" 
-            position="-0.26 1.2 -2.4" 
-            align="center" 
+            position="-0.15 1.2 -2.4" 
+            align="center"
+            frustumCulled="false"
         >
         </a-text>
         <a-text 
@@ -305,9 +319,9 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
             color="white" 
             width="1.3"
             scale="1.2 0.8 1.2" 
-            position="-0.26 1.15 -2.4" 
+            position="-0.15 1.15 -2.4" 
             align="center"
-            quantity
+            frustumCulled="false"
         >
         </a-text>  
 
@@ -316,8 +330,9 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
             color="white" 
             width="1.3"
             scale="1.2 0.8 1.2" 
-            position="0.01 1.2 -2.4" 
-            align="center" 
+            position="0.14 1.2 -2.4" 
+            align="center"
+            frustumCulled="false"
         >
         </a-text>
         <a-text 
@@ -325,19 +340,20 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
             color="white" 
             width="1.3"
             scale="1.2 0.8 1.2" 
-            position="0.01 1.15 -2.4" 
+            position="0.14 1.15 -2.4" 
             align="center"
-            quantityprod
+            frustumCulled="false"
         >
         </a-text>  
 
         <a-text 
-            value="REFUGO" 
+            value="REF" 
             color="white" 
             width="1.3"
             scale="1.2 0.8 1.2" 
-            position="0.35 1.2 -2.4" 
-            align="center" 
+            position="0.40 1.2 -2.4" 
+            align="center"
+            frustumCulled="false"
         >
         </a-text>
         <a-text 
@@ -345,9 +361,9 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
             color="white" 
             width="1.3"
             scale="1.2 0.8 1.2" 
-            position="0.35 1.15 -2.4" 
-            align="center" 
-            scrapquantity
+            position="0.40 1.15 -2.4" 
+            align="center"
+            frustumCulled="false"
         >
         </a-text>
 
@@ -358,6 +374,7 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
             scale="1.2 0.8 1.2" 
             position="0.65 1.2 -2.4" 
             align="center" 
+            frustumCulled="false"
         >
         </a-text>
         <a-text 
@@ -367,20 +384,20 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
             scale="1.2 0.8 1.2" 
             position="0.65 1.15 -2.4" 
             align="center"
-            goodquantity
+            frustumCulled="false"
         >
         </a-text>
 
-        <a-entity line="start: -0.8 1.1 -2.4; end: 0.8 1.1 -2.4; color: white"></a-entity>
+        <a-entity line="start: -0.8 1.1 -2.4; end: 0.8 1.1 -2.4; color: white" frustumCulled="false"></a-entity>
 
         <a-text
-            id="prodProduzindo"
-            value="0000000 - produzindo produto" 
+            id="item"
             color="white" 
             width="1.3"
             scale="1.2 0.8 1.2" 
             position="-0.8 1.05 -2.4" 
             align="left" 
+            frustumCulled="false"
         >
         </a-text>
 
@@ -391,19 +408,19 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
             scale="1.2 0.8 1.2" 
             position="-0.8 0.93 -2.4" 
             align="left" 
-            nextop
+            frustumCulled="false"
         >
         </a-text> 
 
     <!-- GAUGES -->
      <!-- position vertical dos gauges mudada de 0.2 para 0.5 -->
     <a-entity 
-        id="gauges-group" 
+        id="gauges-group" frustumCulled="false" 
     >
         <a-entity 
             id="gauge-OEE" 
             position="-1.1 0.5 -2.4"  
-            scale="0.35 0.35 0.35"  
+            scale="0.35 0.35 0.35"
         >
             <a-ring 
                 id="ring-OEE" 
