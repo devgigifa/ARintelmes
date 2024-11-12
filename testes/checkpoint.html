@@ -1,6 +1,6 @@
+
 <!-- 
-atual versão main4 para edição 
-IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
+atual versão main4 para edição 12/11 17:25
 -->
 
 <!DOCTYPE html>
@@ -26,8 +26,10 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
                     const intelmountAPIResponse = await fetch(`https://intelmount.apps.intelbras.com.br/v1/resources/mount?mac=${qrCodeResponse}`);
                     if (intelmountAPIResponse.ok) {
                         const data = await intelmountAPIResponse.json();
+                        const status = data?.data[0]?.orders?.currents[0]?.status || "stop";
                         console.log(data?.data?.[0].code, data?.data[0]?.orders?.currents[0]?.operationId);
-        
+                        updateMachineStatus(status);
+
                         const machineDetails = {
                             cycletime: (data?.data[0]?.orders?.currents[0]?.item?.factor),
                             operationcode: (data?.data[0]?.orders?.currents[0]?.operationId),
@@ -50,39 +52,89 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
                             }
                         }
                     }
-                    updateMachineStatus(status);
+                    // updateMachineStatus(machineDetails.status, machineDetails);
                 } catch (error) {
                     console.error("Failed to fetch data:", error);
                 }
             }
         }
 
-        // async function updateMachineStatus(status) {
-        //     const grandbox = document.getElementById("grandbox");
-        //     const components = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "nextop", "rescode", "itemtool", "item", "status"];
+        async function updateMachineStatus(status, machineDetails) {
+            const grandbox = document.getElementById("grandbox");
+            const elementsToHide = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "prodNum", "tc", "op", "qtd", "qtdboa", 'qtdprod', 'ref'];
+            const statusEl = document.getElementById("status");
+            const itemEl = document.getElementById("item");
+            const barEl = document.getElementById("production-bar");
+            const rescodeEl = document.getElementById("rescode");
+            
+            let productionValue = 0;
+            document.getElementById("rescode").setAttribute("visible", "true");
+            
+            if (status === "production") {
+                // Estado de Produção
+                grandbox.setAttribute("color", "#00a335");
+                statusEl.setAttribute("value", "PRODUCAO");
+                productionValue = prodNum()
 
-        //     // cor e valor
-        //     grandbox?.setAttribute("color", status === "production"? "#00a335" : status === "stop"? "#c90c0c" : "#8eef80");
+                // Cálculo da barra de produção considerando o valor de refuge
+                // const { quantity, quantityprod, scrapquantity: refuge } = machineDetails;
+                // const total = quantity || 1; // Evitar divisão por zero
 
-        //     status?.setAttribute("value", status === "production"? "PRODUCAO" : status === "stop"? "PARADA" : "PARADO");
-
-        //     // exibir ou esconder os componentes 
-        //     const id = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "nextop", "itemtool"]
-        //     components.forEach(id => {
-        //         document.getElementById(id)?.setAttribute("visible", status === "PARADO"? "false" : "true"),
-        //         document.getElementById("item")?.setAttribute("value", status === "PARADO"? "FORA DE TURNO MÁQUINA DESLIGADA PLANEJADA")
-        //     });
-        // }
+                // if (!refuge) {
+                //     const calc = (quantity / total) * 100;
+                //     return calc;
+                // }
+                // const calc = ((quantity - refuge) / total) * 100;
 
 
-        // Carrega os gauges quando o DOM está pronto
-        document.addEventListener('DOMContentLoaded', () => {
-            const gaugesGroup = document.getElementById("gauges-group");
-            gaugesGroup.setAttribute("visible", "true"); 
-            initGauges();
-            productionBar();
-            initAR(); // Inicia a função de AR após carregar os gauges
-        });
+            } else if (status === "parada") {
+                // Estado Parada com ordem
+                grandbox.setAttribute("color", "#d72735");
+                statusEl.setAttribute("value", "PARADA COM ORDEM");
+                barEl.setAttribute("color", "#b4212c")
+                productionValue = 0; 
+
+                for (const id of elementsToHide) {
+                    document.getElementById(id).setAttribute("visible", "true");
+                }
+                document.getElementById("perf").setAttribute("visible", "true");
+
+            } else if (status === "stop") {
+                // Estado Fora de Turno
+                grandbox.setAttribute("color", "#adb3b7");
+                statusEl.setAttribute("value", "PARADO");
+                itemEl.setAttribute("value", "FORA DE TURNO MAQUINA DESLIGADA PLANEJADA");
+                productionValue = 100; 
+                barEl.setAttribute("color", "#8f9ca4")
+                rescodeEl.setAttribute("value", "TESTE");
+
+                for (const id of elementsToHide) {
+                    document.getElementById(id).setAttribute("visible", "false");
+                }
+                document.getElementById("perf").setAttribute("visible", "false");
+                // document.getElementById("rescode").setAttribute("visible", "true");
+            }
+
+            updateProductionBar(productionValue);
+        }
+
+function updateProductionBar(value) {
+    const barFill = document.getElementById("production-bar");
+
+    if (barFill) {
+        const fillScale = value / 100;
+        barFill.setAttribute("scale", `${fillScale * 1.3} 0.1 0.1`);
+        barFill.setAttribute("position", `${(fillScale * 1.3 / 2) - 0.65} 0 0`);
+    }
+}
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const gaugesGroup = document.getElementById("gauges-group");
+        gaugesGroup.setAttribute("visible", "true"); 
+        initGauges();
+        productionBar();
+        initAR(); 
+    });
 
 
         // FUNCTION GAUGES
@@ -141,29 +193,44 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
         }
 
         // Funções que atualizam a barra de preenchimento para manter a escala correta
-        function updateProductionBar(value) {
-            const barFill = document.getElementById("production-bar-fill");
+        // function updateProductionBar(value) {
+        //     const barFill = document.getElementById("production-bar");
 
-            if (barFill) {
-                const fillScale = value / 100; 
-                barFill.setAttribute("scale", `${fillScale * 1.3} 0.1 0.1`); 
-                barFill.setAttribute("position", `${(fillScale * 1.3 / 2) - 0.65} 0 0`); 
+        //     if (barFill) {
+        //         const fillScale = value / 100; 
+        //         barFill.setAttribute("scale", `${fillScale * 1.3} 0.1 0.1`); 
+        //         barFill.setAttribute("position", `${(fillScale * 1.3 / 2) - 0.65} 0 0`); 
+        //     }
+
+        //     // if (!refuge) {
+        //     //     const calc = (quantity / total) * 100;
+        //     //     return calc;
+        //     // }
+        //     // const calc = ((quantity - refuge) / total) * 100;
+        // }
+
+        // function productionBar() {
+        //     let productionValue = 0;
+        //     let step = 1; 
+
+        //     const interval = setInterval(() => {
+        //         if (productionValue >= 100) {
+        //             productionValue = 0;
+        //         } else {
+        //             productionValue += step;
+        //         }
+        //         updateProductionBar(productionValue);
+        //     }, 100); 
+        // }
+
+        function prodNum(){
+            if (!refuge) {
+                const calc = (quantity / total) * 100;
+                return calc;
             }
+            const calc = ((quantity - refuge) / total) * 100;
         }
 
-        function productionBar() {
-            let productionValue = 0;
-            let step = 1; 
-
-            const interval = setInterval(() => {
-                if (productionValue >= 100) {
-                    productionValue = 0;
-                } else {
-                    productionValue += step;
-                }
-                updateProductionBar(productionValue);
-            }, 100); 
-        }
 
     </script>
 
@@ -256,12 +323,12 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
                 position="0 0 0"  
                 scale="0 0.1 0.1"  
                 color="darkgreen" 
-                id="production-bar-fill"
+                id="production-bar"
             ></a-box>
         </a-entity>
 
         <a-text 
-            id="statusNum"
+            id="prodNum"
             value="33%"
             color="white" 
             width="1.3"
@@ -269,6 +336,7 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
             position="0 1.3 -2.4" 
             align="center"
             frustumCulled="false"
+            prodNum
         >
         </a-text>  
 
@@ -276,6 +344,7 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
 
         <a-text 
             value="TC" 
+            id="tc" 
             color="white" 
             width="1.3"
             scale="1.2 0.8 1.2" 
@@ -297,6 +366,7 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
 
         <a-text 
             value="OP" 
+            id="op" 
             color="white" 
             width="1.3"
             scale="1.2 0.8 1.2" 
@@ -317,7 +387,8 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
         </a-text>  
 
         <a-text 
-            value="QTD" 
+            value="QTD"
+            id="qtd"
             color="white" 
             width="1.3"
             scale="1.2 0.8 1.2" 
@@ -339,6 +410,7 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
 
         <a-text 
             value="QTD PROD" 
+            id="qtdprod"
             color="white" 
             width="1.3"
             scale="1.2 0.8 1.2" 
@@ -359,7 +431,8 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
         </a-text>  
 
         <a-text 
-            value="REF" 
+            value="REF"
+            id="ref"
             color="white" 
             width="1.3"
             scale="1.2 0.8 1.2" 
@@ -380,7 +453,8 @@ IMPLEMENTANDO INFORMAÇÕES DAS MÁQUINAS
         </a-text>
 
         <a-text 
-            value="QTD BOA" 
+            value="QTD BOA"
+            id="qtdboa"
             color="white" 
             width="1.3"
             scale="1.2 0.8 1.2" 
