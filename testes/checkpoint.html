@@ -1,7 +1,19 @@
 
 <!-- 
-atual versão main4 para edição 12/11 17:25
+atual versão main4 para edição 
 -->
+
+<!-- // Cálculo da barra de produção considerando o valor de refuge
+// const { quantity, quantityprod, scrapquantity: refuge } = machineDetails;
+// const total = quantity || 1; // Evitar divisão por zero
+
+// if (!refuge) {
+//     const calc = (quantity / total) * 100;
+//     return calc;
+// }
+// const calc = ((quantity - refuge) / total) * 100; -->
+
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -11,225 +23,223 @@ atual versão main4 para edição 12/11 17:25
     <link rel="icon" href="https://img.icons8.com/ios_filled/200/40C057/info.png">
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-    
+    <!-- <script src="testeatual.js"></script> -->
+
     <script>
 
-        async function initAR() {
-            const scene = document.querySelector("#a-scene");
-            scene.style.display = "block"; 
+// status STOP:                funcionando só se tiver stopDetails
+// status PRODUCTION:          funcionando só se não tiver stopDetails
+// status INACTIVE:            
 
-            const components = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "nextop", "rescode", "itemtool", "item", "status"];
-            const qrCodeResponse = 'D0:EF:76:45:ED:DF'; //endereço de MAC
 
-            if (qrCodeResponse) {
-                try {
-                    const intelmountAPIResponse = await fetch(`https://intelmount.apps.intelbras.com.br/v1/resources/mount?mac=${qrCodeResponse}`);
-                    if (intelmountAPIResponse.ok) {
-                        const data = await intelmountAPIResponse.json();
-                        const status = data?.data[0]?.orders?.currents[0]?.status || "stop";
-                        console.log(data?.data?.[0].code, data?.data[0]?.orders?.currents[0]?.operationId);
-                        updateMachineStatus(status);
 
-                        const machineDetails = {
-                            cycletime: (data?.data[0]?.orders?.currents[0]?.item?.factor),
-                            operationcode: (data?.data[0]?.orders?.currents[0]?.operationId),
-                            quantity: (data?.data[0]?.orders?.currents[0]?.production?.meta),
-                            quantityprod: (data?.data[0]?.orders?.currents[0]?.production?.current),
-                            scrapquantity: (data?.data[0]?.orders?.currents[0]?.production?.refuge),
-                            goodquantity: ((data?.data[0]?.orders?.currents[0]?.production?.current) - (data?.data[0]?.orders?.currents[0]?.production?.refuge)),
-                            perf: `perf: ${(data?.data[0]?.orders?.currents[0]?.perf).toFixed(2)}%`,
-                            nextop: `Proxima OP: ${"5607040-2"}`,
-                            rescode: (data?.data?.[0].code),
-                            itemtool: (data?.data[0]?.orders?.currents[0]?.item?.tool),
-                            item: `${(data?.data[0]?.orders?.currents[0]?.item?.code)} - ${(data?.data[0]?.orders?.currents[0]?.item?.name)}`,
-                            status: (data?.data[0]?.orders?.currents[0]?.status),
-                        }
 
-                        for (const component of components) {
-                            const element = document.getElementById(component);
-                            if (element) {
-                                element.setAttribute("value", machineDetails[component]);
-                            }
-                        }
+
+
+async function initAR() {
+    const scene = document.querySelector("#a-scene");
+    scene.style.display = "block"; 
+    const components = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "nextop", "rescode", "itemtool", "item", "status"];
+    const qrCodeResponse = 'D0:EF:76:45:ED:DF'; //endereço de MAC
+
+    if (qrCodeResponse) {
+        try {
+            const intelmountAPIResponse = await fetch(`https://intelmount.apps.intelbras.com.br/v1/resources/mount?mac=${qrCodeResponse}`);
+            if (intelmountAPIResponse.ok) {
+                const data = await intelmountAPIResponse.json();
+
+
+                console.log("Resposta completa da API:", data);
+                console.log("Valor do status vindo da API:", (data?.data[0]?.status));
+                console.log("Status:", (data?.data[0]?.status));
+                
+
+                const status = (data?.data[0]?.status)
+
+                const machineDetails = {
+                    cycletime: (data?.data[0]?.orders?.currents[0]?.item?.factor),
+                    operationcode: (data?.data[0]?.orders?.currents[0]?.operationId),
+                    quantity: (data?.data[0]?.orders?.currents[0]?.production?.meta),
+                    quantityprod: (data?.data[0]?.orders?.currents[0]?.production?.current),
+                    scrapquantity: (data?.data[0]?.orders?.currents[0]?.production?.refuge),
+                    goodquantity: ((data?.data[0]?.orders?.currents[0]?.production?.current) - (data?.data[0]?.orders?.currents[0]?.production?.refuge)),
+                    perf: `perf: ${(data?.data[0]?.orders?.currents[0]?.perf).toFixed(2)}%`,
+                    nextop: `Proxima OP: ${"5607040-2"}`,
+                    rescode: (data?.data?.[0].code),
+                    itemtool: (data?.data[0]?.orders?.currents[0]?.item?.tool),
+                    itemname: (data?.data[0]?.orders?.currents[0]?.item?.name),
+                    item: `${(data?.data[0]?.orders?.currents[0]?.item?.code)} - ${(data?.data[0]?.orders?.currents[0]?.item?.name)}`,
+                    status: (data?.data[0]?.status),
+                    // stopDetails: {
+                    //     color: data?.data[0]?.stopDetails[0]?.color,
+                    //     name: data?.data[0]?.stopDetails[0]?.name
+                    // }                
+                }
+
+                for (const component of components) {
+                    const element = document.getElementById(component);
+                    if (element) {
+                        element.setAttribute("value", machineDetails[component]);
                     }
-                    // updateMachineStatus(machineDetails.status, machineDetails);
-                } catch (error) {
-                    console.error("Failed to fetch data:", error);
                 }
+                updateMachineStatus(status, machineDetails);
             }
+        } catch (error) {
+            console.error("Failed to fetch data:", error);
         }
+    }
+}
 
-        async function updateMachineStatus(status, machineDetails) {
-            const grandbox = document.getElementById("grandbox");
-            const elementsToHide = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "prodNum", "tc", "op", "qtd", "qtdboa", 'qtdprod', 'ref'];
-            const statusEl = document.getElementById("status");
-            const itemEl = document.getElementById("item");
-            const barEl = document.getElementById("production-bar");
-            const rescodeEl = document.getElementById("rescode");
-            
-            let productionValue = 0;
-            document.getElementById("rescode").setAttribute("visible", "true");
-            
-            if (status === "production") {
-                // Estado de Produção
-                grandbox.setAttribute("color", "#00a335");
-                statusEl.setAttribute("value", "PRODUCAO");
-                productionValue = prodNum()
-
-                // Cálculo da barra de produção considerando o valor de refuge
-                // const { quantity, quantityprod, scrapquantity: refuge } = machineDetails;
-                // const total = quantity || 1; // Evitar divisão por zero
-
-                // if (!refuge) {
-                //     const calc = (quantity / total) * 100;
-                //     return calc;
-                // }
-                // const calc = ((quantity - refuge) / total) * 100;
+async function updateMachineStatus(status, machineDetails) {            
 
 
-            } else if (status === "parada") {
-                // Estado Parada com ordem
-                grandbox.setAttribute("color", "#d72735");
-                statusEl.setAttribute("value", "PARADA COM ORDEM");
-                barEl.setAttribute("color", "#b4212c")
-                productionValue = 0; 
 
-                for (const id of elementsToHide) {
-                    document.getElementById(id).setAttribute("visible", "true");
-                }
-                document.getElementById("perf").setAttribute("visible", "true");
+    console.log("Status recebido:", status);
+    console.log("Detalhes da máquina recebidos:", machineDetails); 
 
-            } else if (status === "stop") {
-                // Estado Fora de Turno
-                grandbox.setAttribute("color", "#adb3b7");
-                statusEl.setAttribute("value", "PARADO");
-                itemEl.setAttribute("value", "FORA DE TURNO MAQUINA DESLIGADA PLANEJADA");
-                productionValue = 100; 
-                barEl.setAttribute("color", "#8f9ca4")
-                rescodeEl.setAttribute("value", "TESTE");
 
-                for (const id of elementsToHide) {
-                    document.getElementById(id).setAttribute("visible", "false");
-                }
-                document.getElementById("perf").setAttribute("visible", "false");
-                // document.getElementById("rescode").setAttribute("visible", "true");
-            }
 
-            updateProductionBar(productionValue);
+    if (status === "PRODUCTION") {
+        console.log("entrou em produção")
+        // Estado de Produção
+        document.getElementById("grandbox").setAttribute("color", "#00a335");
+        document.getElementById("status").setAttribute("value", "PRODUCAO");
+        document.getElementById("production-bar").setAttribute("color", "#b4212c")
+
+
+    } else if (status === "STOP") {
+        // Estado Parada com ordem
+        console.log("Nome do stopDetails:", machineDetails.stopDetails.name);
+
+        document.getElementById("grandbox").setAttribute("color",  `#${machineDetails.stopDetails.color}`)
+        // por condição para cor igual === '#CBDEE8' muda a cor da fonte para #003610
+        
+        document.getElementById("status").setAttribute("value", "PARADO COM ORDEM");
+        document.getElementById("production-bar").setAttribute("color", "#50788a")
+        document.getElementById("item").setAttribute("value", machineDetails.stopDetails.name)
+
+    } else if (status === "INACTIVE") {
+        // Estado Fora de Turno
+        const elementsToHide = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "perf", "goodquantity", "calcProdNum", "tc", "op", "qtd", "qtdboa", 'qtdprod', 'ref'];
+        
+        document.getElementById("grandbox").setAttribute("color", "#adb3b7");
+        document.getElementById("status").setAttribute("value", "PARADO");
+        document.getElementById("item").setAttribute("value", "FORA DE TURNO MAQUINA DESLIGADA PLANEJADA");
+        
+        let productionValue = 100; 
+        document.getElementById("production-bar").setAttribute("color", "#8f9ca4")
+
+        for (const id of elementsToHide) {
+            document.getElementById(id).setAttribute("visible", "false");
         }
+        // document.getElementById("rescode").setAttribute("visible", "true");
+    }
+}
 
+
+// BARRA DE PRODUÇÃO
+
+// Função que calcula a produção com base na quantidade e o valor total.
+function calcProdNum() {
+    if (!refuge) {
+        const calc = (quantity / total) * 100;
+        return calc; // Calcula a porcentagem de produção.
+    }
+    const calc = ((quantity - refuge) / total) * 100;
+    return calc; // Calcula a produção considerando o refúgio.
+}
+
+
+// Funções que atualizam a barra de preenchimento para manter a escala correta
 function updateProductionBar(value) {
     const barFill = document.getElementById("production-bar");
 
     if (barFill) {
-        const fillScale = value / 100;
-        barFill.setAttribute("scale", `${fillScale * 1.3} 0.1 0.1`);
-        barFill.setAttribute("position", `${(fillScale * 1.3 / 2) - 0.65} 0 0`);
+        const fillScale = value / 100; 
+        barFill.setAttribute("scale", `${fillScale * 1.3} 0.1 0.1`); 
+        barFill.setAttribute("position", `${(fillScale * 1.3 / 2) - 0.65} 0 0`); 
     }
 }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const gaugesGroup = document.getElementById("gauges-group");
-        gaugesGroup.setAttribute("visible", "true"); 
-        initGauges();
-        productionBar();
-        initAR(); 
-    });
+function productionBar() {
+    // Calculando o valor da produção
+    let productionValue = calcProdNum(); // Obtém o valor da produção.
+    
+    // Caso o valor de produção seja superior a 100, é definido como 100 para não ultrapassar.
+    if (productionValue > 100) {
+        productionValue = 100;
+    }
+
+    updateProductionBar(productionValue); // Atualiza a barra de produção com o valor calculado.
+}
 
 
-        // FUNCTION GAUGES
 
-        // Função para gerar um valor aleatório entre dois números
-        function getRandomValue(min, max) {
-            return Math.random() * (max - min) + min;
+
+
+document.addEventListener('DOMContentLoaded', () => {
+const gaugesGroup = document.getElementById("gauges-group");
+gaugesGroup.setAttribute("visible", "true"); 
+initGauges();
+updateProductionBar(productionValue);
+initAR(); 
+});
+
+
+// FUNCTION GAUGES
+
+// Função para gerar um valor aleatório entre dois números
+function getRandomValue(min, max) {
+    return Math.random() * (max - min) + min;
+}
+
+// Atualiza os gauges gradualmente
+function simulateGaugeChange(textId, ringId, currentValue) {
+    const newValue = getRandomValue(0, 100);
+    let step = (newValue - currentValue) / 100;
+
+    const interval = setInterval(() => {
+        if (Math.abs(newValue - currentValue) < Math.abs(step)) {
+            currentValue = newValue;
+            clearInterval(interval);
+        } else {
+            currentValue += step;
         }
+        updateGauge(currentValue, textId, ringId);
+    }, 100); // Atualiza a cada 50ms para uma transição suave
+}
 
-        // Atualiza os gauges gradualmente
-        function simulateGaugeChange(textId, ringId, currentValue) {
-            const newValue = getRandomValue(0, 100);
-            let step = (newValue - currentValue) / 100;
+// Inicializa os gauges
+function initGauges() {
+    let OEEValue = 100, DispValue = 100, PerfValue = 100, QualValue = 100;
 
-            const interval = setInterval(() => {
-                if (Math.abs(newValue - currentValue) < Math.abs(step)) {
-                    currentValue = newValue;
-                    clearInterval(interval);
-                } else {
-                    currentValue += step;
-                }
-                updateGauge(currentValue, textId, ringId);
-            }, 100); // Atualiza a cada 50ms para uma transição suave
-        }
+    setInterval(() => {
+        simulateGaugeChange('text-OEE', 'ring-OEE', OEEValue);
+        simulateGaugeChange('text-Disponibilidade', 'ring-Disponibilidade', DispValue);
+        simulateGaugeChange('text-Performance', 'ring-Performance', PerfValue);
+        simulateGaugeChange('text-Qualidade', 'ring-Qualidade', QualValue);
+    }, 10000);
+}
 
-        // Inicializa os gauges
-        function initGauges() {
-            let OEEValue = 100, DispValue = 100, PerfValue = 100, QualValue = 100;
+// Atualiza os gauges
+function updateGauge(value, textId, ringId) {
+    const textEntity = document.getElementById(textId);
+    const ringEntity = document.getElementById(ringId);
 
-            setInterval(() => {
-                simulateGaugeChange('text-OEE', 'ring-OEE', OEEValue);
-                simulateGaugeChange('text-Disponibilidade', 'ring-Disponibilidade', DispValue);
-                simulateGaugeChange('text-Performance', 'ring-Performance', PerfValue);
-                simulateGaugeChange('text-Qualidade', 'ring-Qualidade', QualValue);
-            }, 10000);
-        }
+    if (textEntity && ringEntity) {
+        textEntity.setAttribute('value', textId.split('-')[1] + ': ' + Math.round(value) + '%');
 
-        // Atualiza os gauges
-        function updateGauge(value, textId, ringId) {
-            const textEntity = document.getElementById(textId);
-            const ringEntity = document.getElementById(ringId);
+        const greenValue = Math.floor((value / 100) * 255);
+        const redValue = 255 - greenValue;
+        const color = `rgb(${redValue}, ${greenValue}, 0)`;
+        ringEntity.setAttribute('color', color);
 
-            if (textEntity && ringEntity) {
-                textEntity.setAttribute('value', textId.split('-')[1] + ': ' + Math.round(value) + '%');
-
-                const greenValue = Math.floor((value / 100) * 255);
-                const redValue = 255 - greenValue;
-                const color = `rgb(${redValue}, ${greenValue}, 0)`;
-                ringEntity.setAttribute('color', color);
-
-                const thetaLength = (value / 100) * 360;
-                ringEntity.setAttribute('theta-length', thetaLength);
-            } else {
-                console.warn("Element not found:", textId, ringId);
-            }
-        }
-
-        // Funções que atualizam a barra de preenchimento para manter a escala correta
-        // function updateProductionBar(value) {
-        //     const barFill = document.getElementById("production-bar");
-
-        //     if (barFill) {
-        //         const fillScale = value / 100; 
-        //         barFill.setAttribute("scale", `${fillScale * 1.3} 0.1 0.1`); 
-        //         barFill.setAttribute("position", `${(fillScale * 1.3 / 2) - 0.65} 0 0`); 
-        //     }
-
-        //     // if (!refuge) {
-        //     //     const calc = (quantity / total) * 100;
-        //     //     return calc;
-        //     // }
-        //     // const calc = ((quantity - refuge) / total) * 100;
-        // }
-
-        // function productionBar() {
-        //     let productionValue = 0;
-        //     let step = 1; 
-
-        //     const interval = setInterval(() => {
-        //         if (productionValue >= 100) {
-        //             productionValue = 0;
-        //         } else {
-        //             productionValue += step;
-        //         }
-        //         updateProductionBar(productionValue);
-        //     }, 100); 
-        // }
-
-        function prodNum(){
-            if (!refuge) {
-                const calc = (quantity / total) * 100;
-                return calc;
-            }
-            const calc = ((quantity - refuge) / total) * 100;
-        }
+        const thetaLength = (value / 100) * 360;
+        ringEntity.setAttribute('theta-length', thetaLength);
+    } else {
+        console.warn("Element not found:", textId, ringId);
+    }
+}
 
 
     </script>
@@ -258,7 +268,7 @@ function updateProductionBar(value) {
             id="grandbox"
             position="0 1.25 -3"
             rotation="0 0 0"
-            color="#00a335"
+            color="#000000"
             scale="2 1 0.5"
             frustumCulled="false"
         >
@@ -328,7 +338,7 @@ function updateProductionBar(value) {
         </a-entity>
 
         <a-text 
-            id="prodNum"
+            id="productionNum"
             value="33%"
             color="white" 
             width="1.3"
@@ -336,7 +346,7 @@ function updateProductionBar(value) {
             position="0 1.3 -2.4" 
             align="center"
             frustumCulled="false"
-            prodNum
+            calcProdNum
         >
         </a-text>  
 

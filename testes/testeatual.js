@@ -1,3 +1,13 @@
+
+// status STOP:                funcionando só se tiver stopDetails
+// status PRODUCTION:          funcionando só se não tiver stopDetails
+// status INACTIVE:            
+
+
+
+
+
+
 async function initAR() {
     const scene = document.querySelector("#a-scene");
     scene.style.display = "block"; 
@@ -18,7 +28,6 @@ async function initAR() {
 
                 const status = (data?.data[0]?.status)
 
-
                 const machineDetails = {
                     cycletime: (data?.data[0]?.orders?.currents[0]?.item?.factor),
                     operationcode: (data?.data[0]?.orders?.currents[0]?.operationId),
@@ -33,10 +42,10 @@ async function initAR() {
                     itemname: (data?.data[0]?.orders?.currents[0]?.item?.name),
                     item: `${(data?.data[0]?.orders?.currents[0]?.item?.code)} - ${(data?.data[0]?.orders?.currents[0]?.item?.name)}`,
                     status: (data?.data[0]?.status),
-                    stopDetails: {
-                        color: data?.data[0]?.stopDetails[0]?.color,
-                        name: data?.data[0]?.stopDetails[0]?.name
-                    }                
+                    // stopDetails: {
+                    //     color: data?.data[0]?.stopDetails[0]?.color,
+                    //     name: data?.data[0]?.stopDetails[0]?.name
+                    // }                
                 }
 
                 for (const component of components) {
@@ -63,22 +72,27 @@ async function updateMachineStatus(status, machineDetails) {
 
 
     if (status === "PRODUCTION") {
+        console.log("entrou em produção")
         // Estado de Produção
         document.getElementById("grandbox").setAttribute("color", "#00a335");
         document.getElementById("status").setAttribute("value", "PRODUCAO");
+        document.getElementById("production-bar").setAttribute("color", "#b4212c")
+
 
     } else if (status === "STOP") {
         // Estado Parada com ordem
         console.log("Nome do stopDetails:", machineDetails.stopDetails.name);
 
         document.getElementById("grandbox").setAttribute("color",  `#${machineDetails.stopDetails.color}`)
+        // por condição para cor igual === '#CBDEE8' muda a cor da fonte para #003610
+        
         document.getElementById("status").setAttribute("value", "PARADO COM ORDEM");
-        document.getElementById("production-bar").setAttribute("color", "#b4212c")
+        document.getElementById("production-bar").setAttribute("color", "#50788a")
         document.getElementById("item").setAttribute("value", machineDetails.stopDetails.name)
 
     } else if (status === "INACTIVE") {
         // Estado Fora de Turno
-        const elementsToHide = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "perf", "goodquantity", "productionNum", "tc", "op", "qtd", "qtdboa", 'qtdprod', 'ref'];
+        const elementsToHide = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "perf", "goodquantity", "calcProdNum", "tc", "op", "qtd", "qtdboa", 'qtdprod', 'ref'];
         
         document.getElementById("grandbox").setAttribute("color", "#adb3b7");
         document.getElementById("status").setAttribute("value", "PARADO");
@@ -95,6 +109,19 @@ async function updateMachineStatus(status, machineDetails) {
 }
 
 
+// BARRA DE PRODUÇÃO
+
+// Função que calcula a produção com base na quantidade e o valor total.
+function calcProdNum() {
+    if (!refuge) {
+        const calc = (quantity / total) * 100;
+        return calc; // Calcula a porcentagem de produção.
+    }
+    const calc = ((quantity - refuge) / total) * 100;
+    return calc; // Calcula a produção considerando o refúgio.
+}
+
+
 // Funções que atualizam a barra de preenchimento para manter a escala correta
 function updateProductionBar(value) {
     const barFill = document.getElementById("production-bar");
@@ -104,35 +131,21 @@ function updateProductionBar(value) {
         barFill.setAttribute("scale", `${fillScale * 1.3} 0.1 0.1`); 
         barFill.setAttribute("position", `${(fillScale * 1.3 / 2) - 0.65} 0 0`); 
     }
-
-    // if (!refuge) {
-    //     const calc = (quantity / total) * 100;
-    //     return calc;
-    // }
-    // const calc = ((quantity - refuge) / total) * 100;
 }
 
 function productionBar() {
-    let productionValue = 0;
-    let step = 1; 
-
-    const interval = setInterval(() => {
-        if (productionValue >= 100) {
-            productionValue = 0;
-        } else {
-            productionValue += step;
-        }
-        updateProductionBar(productionValue);
-    }, 100); 
-}
-
-function productionNum(){
-    if (!refuge) {
-        const calc = (quantity / total) * 100;
-        return calc;
+    // Calculando o valor da produção
+    let productionValue = calcProdNum(); // Obtém o valor da produção.
+    
+    // Caso o valor de produção seja superior a 100, é definido como 100 para não ultrapassar.
+    if (productionValue > 100) {
+        productionValue = 100;
     }
-    const calc = ((quantity - refuge) / total) * 100;
+
+    updateProductionBar(productionValue); // Atualiza a barra de produção com o valor calculado.
 }
+
+
 
 
 
