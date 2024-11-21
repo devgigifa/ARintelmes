@@ -3,11 +3,6 @@
 // status PRODUCTION:          funcionando só se não tiver stopDetails
 // status INACTIVE:            
 
-
-
-
-
-
 async function initAR() {
     const scene = document.querySelector("#a-scene");
     scene.style.display = "block"; 
@@ -20,13 +15,26 @@ async function initAR() {
             if (intelmountAPIResponse.ok) {
                 const data = await intelmountAPIResponse.json();
 
-
                 console.log("Resposta completa da API:", data);
                 console.log("Valor do status vindo da API:", (data?.data[0]?.status));
                 console.log("Status:", (data?.data[0]?.status));
-                
 
                 const status = (data?.data[0]?.status)
+
+// isso aqui é o problema, não entra em produção porque dá erro em stopDetails, por não existir no status produção. Rever lógica e ajustar. 
+// erro no console: checkpoint.html:88 Failed to fetch data: TypeError: Cannot read properties of undefined (reading '0') at initAR (checkpoint.html:74:58)
+
+                // Verificar se stopDetails existe
+                const stopDetails = data?.data?.[0]?.stopDetails?.[0]
+                ? {
+                    color: data.data[0].stopDetails[0].color,
+                    name: data.data[0].stopDetails[0].name,
+                }
+                : null;
+
+                // Verificar se orders existe
+                const orders = data?.data?.[0]?.stopDetails?.[0]?.orders || null;
+
 
                 const machineDetails = {
                     cycletime: (data?.data[0]?.orders?.currents[0]?.item?.factor),
@@ -45,7 +53,7 @@ async function initAR() {
                     // stopDetails: {
                     //     color: data?.data[0]?.stopDetails[0]?.color,
                     //     name: data?.data[0]?.stopDetails[0]?.name
-                    // }                
+                    // }
                 }
 
                 for (const component of components) {
@@ -54,7 +62,7 @@ async function initAR() {
                         element.setAttribute("value", machineDetails[component]);
                     }
                 }
-                updateMachineStatus(status, machineDetails);
+                updateMachineStatus(status, orders, stopDetails, machineDetails);
             }
         } catch (error) {
             console.error("Failed to fetch data:", error);
@@ -62,89 +70,112 @@ async function initAR() {
     }
 }
 
-async function updateMachineStatus(status, machineDetails) {            
-
-
-
+async function updateMachineStatus(status, orders, stopDetails, machineDetails) {
     console.log("Status recebido:", status);
-    console.log("Detalhes da máquina recebidos:", machineDetails); 
-
-
+    console.log("Detalhes da máquina recebidos:", machineDetails);
 
     if (status === "PRODUCTION") {
-        console.log("entrou em produção")
-        // Estado de Produção
+        // Estado: Produção
+        console.log("Entrou em produção");
+
         document.getElementById("grandbox").setAttribute("color", "#00a335");
         document.getElementById("status").setAttribute("value", "PRODUCAO");
-        document.getElementById("production-bar").setAttribute("color", "#b4212c")
-
+        document.getElementById("production-bar").setAttribute("color", "#b4212c");
 
     } else if (status === "STOP") {
-        // Estado Parada com ordem
-        console.log("Nome do stopDetails:", machineDetails.stopDetails.name);
+        // Estado: Parado
+        console.log("Entrou em parado");
 
-        document.getElementById("grandbox").setAttribute("color",  `#${machineDetails.stopDetails.color}`)
-        // por condição para cor igual === '#CBDEE8' muda a cor da fonte para #003610
-        
-        document.getElementById("status").setAttribute("value", "PARADO COM ORDEM");
-        document.getElementById("production-bar").setAttribute("color", "#50788a")
-        document.getElementById("item").setAttribute("value", machineDetails.stopDetails.name)
+        if (!stopDetails || orders === null) {
+            // Parado sem ordem
+            const elementsToHide = [
+                "cycletime", "operationcode", "quantity", "quantityprod",
+                "scrapquantity", "perf", "goodquantity", "calcProdNum", 
+                "tc", "op", "qtd", "qtdboa", "qtdprod", "ref"
+            ];
+    
+            document.getElementById("grandbox").setAttribute("color", "#adb3b7");
+            document.getElementById("status").setAttribute("value", "FORA DE TURNO");
+            document.getElementById("item").setAttribute("value", "MAQUINA DESLIGADA PLANEJADA");
+            document.getElementById("production-bar").setAttribute("color", "#8f9ca4");
+    
+            for (const id of elementsToHide) {
+                const element = document.getElementById(id);
+                if (element) element.setAttribute("visible", "false");
+            }
+        } else {
+            // Parado com ordem
+            console.log("Nome do stopDetails:", stopDetails.name);
 
+            document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color}`);
+            if (stopDetails.color === "CBDEE8") {
+                document.getElementById("status").setAttribute("color", "#003610");
+            }
+
+            document.getElementById("status").setAttribute("value", "PARADO COM ORDEM");
+            document.getElementById("production-bar").setAttribute("color", "#50788a");
+            document.getElementById("item").setAttribute("value", stopDetails.name);
+        }
     } else if (status === "INACTIVE") {
-        // Estado Fora de Turno
-        const elementsToHide = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "perf", "goodquantity", "calcProdNum", "tc", "op", "qtd", "qtdboa", 'qtdprod', 'ref'];
-        
+        // Estado: Fora de Turno
+        console.log("Entrou em inativo");
+
+        const elementsToHide = [
+            "cycletime", "operationcode", "quantity", "quantityprod",
+            "scrapquantity", "perf", "goodquantity", "calcProdNum", 
+            "tc", "op", "qtd", "qtdboa", "qtdprod", "ref"
+        ];
+
         document.getElementById("grandbox").setAttribute("color", "#adb3b7");
-        document.getElementById("status").setAttribute("value", "PARADO");
-        document.getElementById("item").setAttribute("value", "FORA DE TURNO MAQUINA DESLIGADA PLANEJADA");
-        
-        let productionValue = 100; 
-        document.getElementById("production-bar").setAttribute("color", "#8f9ca4")
+        document.getElementById("status").setAttribute("value", "FORA DE TURNO");
+        document.getElementById("item").setAttribute("value", "MAQUINA DESLIGADA PLANEJADA");
+        document.getElementById("production-bar").setAttribute("color", "#8f9ca4");
 
         for (const id of elementsToHide) {
-            document.getElementById(id).setAttribute("visible", "false");
+            const element = document.getElementById(id);
+            if (element) element.setAttribute("visible", "false");
         }
-        // document.getElementById("rescode").setAttribute("visible", "true");
     }
 }
 
 
-// BARRA DE PRODUÇÃO
+// BARRA DE PRODUÇÃO ............................................................................................................
 
 // Função que calcula a produção com base na quantidade e o valor total.
-function calcProdNum() {
-    if (!refuge) {
-        const calc = (quantity / total) * 100;
-        return calc; // Calcula a porcentagem de produção.
-    }
-    const calc = ((quantity - refuge) / total) * 100;
-    return calc; // Calcula a produção considerando o refúgio.
-}
+// function calcProdNum() {
+//     if (!refuge) {
+//         const calc = (quantity / total) * 100;
+//         return calc; // Calcula a porcentagem de produção.
+//     }
+//     const calc = ((quantity - refuge) / total) * 100;
+//     return calc; // Calcula a produção considerando o refúgio.
+// }
 
 
-// Funções que atualizam a barra de preenchimento para manter a escala correta
-function updateProductionBar(value) {
-    const barFill = document.getElementById("production-bar");
+// // Funções que atualizam a barra de preenchimento para manter a escala correta
+// function updateProductionBar(value) {
+//     const barFill = document.getElementById("production-bar");
 
-    if (barFill) {
-        const fillScale = value / 100; 
-        barFill.setAttribute("scale", `${fillScale * 1.3} 0.1 0.1`); 
-        barFill.setAttribute("position", `${(fillScale * 1.3 / 2) - 0.65} 0 0`); 
-    }
-}
+//     if (barFill) {
+//         const fillScale = value / 100; 
+//         barFill.setAttribute("scale", `${fillScale * 1.3} 0.1 0.1`); 
+//         barFill.setAttribute("position", `${(fillScale * 1.3 / 2) - 0.65} 0 0`); 
+//     }
+// }
 
-function productionBar() {
-    // Calculando o valor da produção
-    let productionValue = calcProdNum(); // Obtém o valor da produção.
+// function productionBar() {
+//     // Calculando o valor da produção
+//     let value = calcProdNum(); // Obtém o valor da produção.
     
-    // Caso o valor de produção seja superior a 100, é definido como 100 para não ultrapassar.
-    if (productionValue > 100) {
-        productionValue = 100;
-    }
+//     // Caso o valor de produção seja superior a 100, é definido como 100 para não ultrapassar.
+//     if (value > 100) {
+//         value = 100;
+//     }
 
-    updateProductionBar(productionValue); // Atualiza a barra de produção com o valor calculado.
-}
+//     updateProductionBar(value); // Atualiza a barra de produção com o valor calculado.
+// }
 
+// .............................................................................................................................
 
 
 
@@ -153,12 +184,12 @@ document.addEventListener('DOMContentLoaded', () => {
 const gaugesGroup = document.getElementById("gauges-group");
 gaugesGroup.setAttribute("visible", "true"); 
 initGauges();
-updateProductionBar(productionValue);
+updateProductionBar(value);
 initAR(); 
 });
 
 
-// FUNCTION GAUGES
+// GAUGES ........................................................................................................
 
 // Função para gerar um valor aleatório entre dois números
 function getRandomValue(min, max) {
@@ -212,4 +243,4 @@ function updateGauge(value, textId, ringId) {
         console.warn("Element not found:", textId, ringId);
     }
 }
-
+// .............................................................................................................................
