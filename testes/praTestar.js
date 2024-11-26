@@ -1,6 +1,5 @@
 
-// status STOP with orders:          não funciona, não ta reconhecendo quando ta parado e tem ordem, 
-//                                   entrando direto no parado sem ordem   
+// status STOP with orders:          não funciona       
 // status STOP without orders:       funciona         
 // status PRODUCTION:                funciona
 // status INACTIVE:                  sem exemplo, mas configurado
@@ -32,10 +31,10 @@ async function initAR() {
                 ? {
                     color: data.data[0].stopDetails[0].color,
                     name: data.data[0].stopDetails[0].name,
-                } : null;
+                }
+                : null;
 
                 // Verificar se orders existe
-                // const orders = data?.data?.[0]?.stopDetails?.[0]?.orders?.currents[0]?.production;
                 const orders = data?.data?.[0]?.stopDetails?.[0]?.orders?.currents[0]?.production || null;
                 // modificado para ver se funciona stop with orders
 
@@ -74,8 +73,11 @@ async function updateMachineStatus(status, orders, stopDetails, machineDetails) 
     console.log("Status recebido:", status);
     console.log("Detalhes da máquina recebidos:", machineDetails);
 
+    // Checando os valores de orders e stopDetails
+    console.log("Valor de orders:", orders);
+    console.log("Valor de stopDetails:", stopDetails);
+
     if (status === "PRODUCTION") {
-        // ok
         // Estado: Produção
         console.log("Entrou em produção");
 
@@ -83,20 +85,32 @@ async function updateMachineStatus(status, orders, stopDetails, machineDetails) 
         document.getElementById("status").setAttribute("value", "PRODUCAO");
         document.getElementById("production-bar").setAttribute("color", "#b4212c");
 
-
-
-
-
-        
     } else if (status === "STOP") {
-        // Estado: Parado
-        console.log("Entrou em parado");
+        console.log("Entrou em estado STOP");
 
+        // Verificar se orders existe corretamente
+        if (!orders) {
+            // Parado sem ordem
+            console.log("STOP sem ordem detectado");
 
+            const elementsToHide = [
+                "cycletime", "operationcode", "quantity", "quantityprod",
+                "scrapquantity", "perf", "goodquantity", "calcProdNum", 
+                "tc", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop"
+            ];
 
-        if (!stopDetails || orders) {
+            document.getElementById("grandbox").setAttribute("color", "#adb3b7");
+            document.getElementById("status").setAttribute("value", "FORA DE TURNO");
+            document.getElementById("item").setAttribute("value", "MAQUINA DESLIGADA PLANEJADA");
+            document.getElementById("production-bar").setAttribute("color", "#8f9ca4");
+
+            for (const id of elementsToHide) {
+                const element = document.getElementById(id);
+                if (element) element.setAttribute("visible", "false");
+            }
+        } else if (stopDetails && orders !== null) {
             // Parado com ordem
-            console.log("Nome do stopDetails:", stopDetails.name);
+            console.log("STOP com ordem detectado");
 
             document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color}`);
             if (stopDetails.color === "CBDEE8") {
@@ -106,30 +120,9 @@ async function updateMachineStatus(status, orders, stopDetails, machineDetails) 
             document.getElementById("status").setAttribute("value", "PARADO COM ORDEM");
             document.getElementById("production-bar").setAttribute("color", "#50788a");
             document.getElementById("item").setAttribute("value", stopDetails.name);
+        } else {
+            console.log("Erro na lógica: Não entrou em nenhum caso esperado para STOP.");
         }
-        else if (!stopDetails || orders === null) {
-            console.log('entrou em stop sem ordem')
-            // Parado sem ordem
-            const elementsToHide = [
-                "cycletime", "operationcode", "quantity", "quantityprod",
-                "scrapquantity", "perf", "goodquantity", "calcProdNum", 
-                "tc", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop", 
-            ];
-    
-            document.getElementById("grandbox").setAttribute("color", "#adb3b7");
-            document.getElementById("status").setAttribute("value", "FORA DE TURNO");
-            document.getElementById("item").setAttribute("value", "MAQUINA DESLIGADA PLANEJADA");
-            document.getElementById("production-bar").setAttribute("color", "#8f9ca4");
-    
-            for (const id of elementsToHide) {
-                const element = document.getElementById(id);
-                if (element) element.setAttribute("visible", "false");
-            }
-        } 
-
-
-
-
     } else if (status === "INACTIVE") {
         // Estado: Fora de Turno
         console.log("Entrou em inativo");
