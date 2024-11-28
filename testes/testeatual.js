@@ -1,6 +1,5 @@
 
-// status STOP with orders:          não funciona, não ta reconhecendo quando ta parado e tem ordem, 
-//                                   entrando direto no parado sem ordem   
+// status STOP with orders:          funciona 
 // status STOP without orders:       funciona         
 // status PRODUCTION:                funciona
 // status INACTIVE:                  sem exemplo, mas configurado
@@ -10,7 +9,7 @@ async function initAR() {
     const scene = document.querySelector("#a-scene");
     scene.style.display = "block"; 
     const components = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "nextop", "rescode", "itemtool", "item", "status"];
-    const qrCodeResponse = 'D0:EF:76:45:ED:DF'; //endereço de MAC
+    const qrCodeResponse = 'D0:EF:76:44:A8:A7'; //endereço de MAC
 
     if (qrCodeResponse) {
         try {
@@ -26,7 +25,6 @@ async function initAR() {
 
 // RESOLVIDO; não entra em produção porque dá erro em stopDetails, por não existir no status produção. Rever lógica e ajustar. 
 // erro no console: checkpoint.html:88 Failed to fetch data: TypeError: Cannot read properties of undefined (reading '0') at initAR (checkpoint.html:74:58)
-
                 // Verificar se stopDetails existe
                 const stopDetails = data?.data?.[0]?.stopDetails?.[0]
                 ? {
@@ -35,8 +33,8 @@ async function initAR() {
                 } : null;
 
                 // Verificar se orders existe
-                // const orders = data?.data?.[0]?.stopDetails?.[0]?.orders?.currents[0]?.production;
-                const orders = data?.data?.[0]?.stopDetails?.[0]?.orders?.currents[0]?.production || null;
+                const orders = data?.data?.[0]?.stopDetails?.[0]?.orders?.currents[0]?.production;
+                // const orders = data?.data?.[0]?.stopDetails?.[0]?.orders?.currents[0]?.production || null;
                 // modificado para ver se funciona stop with orders
 
                 const machineDetails = {
@@ -82,34 +80,25 @@ async function updateMachineStatus(status, orders, stopDetails, machineDetails) 
         document.getElementById("grandbox").setAttribute("color", "#00a335");
         document.getElementById("status").setAttribute("value", "PRODUCAO");
         document.getElementById("production-bar").setAttribute("color", "#b4212c");
+    } 
 
 
 
-
-
-        
-    } else if (status === "STOP") {
+    else if (status === "STOP") {
         // Estado: Parado
-        console.log("Entrou em parado");
+        console.log("Entrou em parada");
+        // console.log("Nome do stopDetails:", stopDetails.name);
 
+        document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color}`);
+        document.getElementById("status").setAttribute("value", "PARADO");
+        document.getElementById("production-bar").setAttribute("color", "#50788a");
+        document.getElementById("item").setAttribute("value", stopDetails.name);
 
-
-        if (!stopDetails || orders) {
-            // Parado com ordem
-            console.log("Nome do stopDetails:", stopDetails.name);
-
-            document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color}`);
-            if (stopDetails.color === "CBDEE8") {
-                document.getElementById("status").setAttribute("color", "#003610");
-            }
-
-            document.getElementById("status").setAttribute("value", "PARADO COM ORDEM");
-            document.getElementById("production-bar").setAttribute("color", "#50788a");
-            document.getElementById("item").setAttribute("value", stopDetails.name);
-        }
-        else if (!stopDetails || orders === null) {
-            console.log('entrou em stop sem ordem')
+        if (stopDetails.color === "CBDEE8") {
             // Parado sem ordem
+            console.log('entrou em stop sem ordem')
+            console.log(orders) // null
+
             const elementsToHide = [
                 "cycletime", "operationcode", "quantity", "quantityprod",
                 "scrapquantity", "perf", "goodquantity", "calcProdNum", 
@@ -117,20 +106,42 @@ async function updateMachineStatus(status, orders, stopDetails, machineDetails) 
             ];
     
             document.getElementById("grandbox").setAttribute("color", "#adb3b7");
-            document.getElementById("status").setAttribute("value", "FORA DE TURNO");
-            document.getElementById("item").setAttribute("value", "MAQUINA DESLIGADA PLANEJADA");
+            document.getElementById("status").setAttribute("value", "PARADO");
+            document.getElementById("item").setAttribute("value", "FORA DE TURNO: MAQUINA DESLIGADA PLANEJADA");
             document.getElementById("production-bar").setAttribute("color", "#8f9ca4");
+            // document.getElementById("status").setAttribute("color", "#003610");
     
             for (const id of elementsToHide) {
                 const element = document.getElementById(id);
                 if (element) element.setAttribute("visible", "false");
             }
-        } 
+        }
+    }
 
+        // não tava funcionando assim, não consegui resolver a lógica para que fosse reconhecido quando orders fosse null e quando não fosse e passar por esses casos, optando por referenciar orders null à cor única do mesmo
+        // else if (!stopDetails || orders === null) {
+        //     console.log('entrou em stop sem ordem')
+        //     console.log(orders) // null
 
-
-
-    } else if (status === "INACTIVE") {
+        //     // Parado sem ordem
+        //     const elementsToHide = [
+        //         "cycletime", "operationcode", "quantity", "quantityprod",
+        //         "scrapquantity", "perf", "goodquantity", "calcProdNum", 
+        //         "tc", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop", 
+        //     ];
+    
+        //     document.getElementById("grandbox").setAttribute("color", "#adb3b7");
+        //     document.getElementById("status").setAttribute("value", "FORA DE TURNO");
+        //     document.getElementById("item").setAttribute("value", "MAQUINA DESLIGADA PLANEJADA");
+        //     document.getElementById("production-bar").setAttribute("color", "#8f9ca4");
+    
+        //     for (const id of elementsToHide) {
+        //         const element = document.getElementById(id);
+        //         if (element) element.setAttribute("visible", "false");
+        //     }
+        // } 
+    
+    else if (status === "INACTIVE") {
         // Estado: Fora de Turno
         console.log("Entrou em inativo");
 
@@ -141,8 +152,8 @@ async function updateMachineStatus(status, orders, stopDetails, machineDetails) 
         ];
 
         document.getElementById("grandbox").setAttribute("color", "#adb3b7");
-        document.getElementById("status").setAttribute("value", "FORA DE TURNO");
-        document.getElementById("item").setAttribute("value", "MAQUINA DESLIGADA PLANEJADA");
+        document.getElementById("status").setAttribute("value", "INATIVO");
+        document.getElementById("item").setAttribute("value", "FORA DE TURNO: MAQUINA DESLIGADA PLANEJADA");
         document.getElementById("production-bar").setAttribute("color", "#8f9ca4");
 
         for (const id of elementsToHide) {
@@ -195,11 +206,11 @@ async function updateMachineStatus(status, orders, stopDetails, machineDetails) 
 
 
 document.addEventListener('DOMContentLoaded', () => {
-const gaugesGroup = document.getElementById("gauges-group");
-gaugesGroup.setAttribute("visible", "true"); 
-initGauges();
-updateProductionBar(value);
-initAR(); 
+    const gaugesGroup = document.getElementById("gauges-group");
+    gaugesGroup.setAttribute("visible", "true"); 
+    initGauges();
+    updateProductionBar(value);
+    initAR(); 
 });
 
 
