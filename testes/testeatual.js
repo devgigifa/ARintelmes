@@ -2,7 +2,10 @@ async function initAR() {
     const scene = document.querySelector("#a-scene");
     scene.style.display = "block"; 
     const components = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "nextop", "rescode", "itemtool", "item", "status"];
-    const qrCodeResponse = 'D0:EF:76:44:C8:87'; //endereço de MAC
+    const qrCodeResponse = 'D0:EF:76:44:9F:87'; //endereço de MAC
+
+
+    // D0:EF:76:45:6F:03
 
     if (qrCodeResponse) {
         try {
@@ -72,9 +75,9 @@ async function updateMachineStatus(status, orders, stopDetails, machineDetails) 
 
         document.getElementById("grandbox").setAttribute("color", "#00a335");
         document.getElementById("status").setAttribute("value", "PRODUCAO");
-        document.getElementById("production-bar").setAttribute("color", "#b4212c");
+        document.getElementById("production-bar").setAttribute("color", "##246F3C");
 
-        // if (!orders) {
+        // if (orders === 'null') { //!orders não funciona aqui, testar se da forma atual funciona (não mudou produção por ora)
         //     document.getElementById("item").setAttribute("value", "sem item");
         //     const elementsToHide = [
         //         "cycletime", "operationcode", "quantity", "quantityprod",
@@ -86,6 +89,7 @@ async function updateMachineStatus(status, orders, stopDetails, machineDetails) 
         //         if (element) element.setAttribute("visible", "false");
         //     }
         // }
+        updateProductionStatus(machineDetails);
     }
 
 
@@ -98,35 +102,37 @@ async function updateMachineStatus(status, orders, stopDetails, machineDetails) 
         document.getElementById("production-bar").setAttribute("color", "#50788a");
         document.getElementById("item").setAttribute("value", stopDetails.name);
 
-        if (stopDetails.color === "CBDEE8") { // !orders ou stopDetails && orders === null ; entra aqui, mas talvez não esteja entrando quando tem ordem
-            // Parado sem ordem
-            console.log('entrou em stop sem ordem')
-            console.log(orders) // null
+        // if (orders === 'null') { // !orders ou stopDetails && orders.currents ou orders === 'null' ; entra, mas não sai
+        //     // Parado sem ordem
+        //     console.log('entrou em stop sem ordem')
+        //     console.log(orders) // null
+        //     console.log('orders:', orders, 'tipo:', typeof orders);
 
-            const elementsToHide = [
-                "cycletime", "operationcode", "quantity", "quantityprod",
-                "scrapquantity", "perf", "goodquantity", "calcProdNum", 
-                "tc", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop", 
-            ];
+
+        //     const elementsToHide = [
+        //         "cycletime", "operationcode", "quantity", "quantityprod",
+        //         "scrapquantity", "perf", "goodquantity", "calcProdNum", 
+        //         "tc", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop", "statusPercentage"
+        //     ];
     
-            document.getElementById("grandbox").setAttribute("color", "#adb3b7");
-            document.getElementById("status").setAttribute("value", "PARADO");
-            document.getElementById("item").setAttribute("value", "FORA DE TURNO: MAQUINA DESLIGADA PLANEJADA");
-            document.getElementById("production-bar").setAttribute("color", "#8f9ca4");
-            // document.getElementById("status").setAttribute("color", "#003610");
+        //     document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);
+        //     document.getElementById("status").setAttribute("value", "PARADO");
+        //     document.getElementById("item").setAttribute("value", stopDetails.name);
+        //     document.getElementById("production-bar").setAttribute("color", "#8f9ca4");
     
-            for (const id of elementsToHide) {
-                const element = document.getElementById(id);
-                if (element) element.setAttribute("visible", "false");
-            }
-        }
+        //     for (const id of elementsToHide) {
+        //         const element = document.getElementById(id);
+        //         if (element) element.setAttribute("visible", "false");
+        //     }
+        // }
         if (stopDetails.color === "CBDEE8") {
             document.getElementById("grandbox").setAttribute("color", "#adb3b7")
-        } 
+        }
+        updateProductionStatus(machineDetails);
     } 
 
 
-    else if (status === "INACTIVE") {
+    if (status === "INACTIVE") {
         // Estado: Fora de Turno
         console.log("Entrou em inativo");
 
@@ -145,6 +151,24 @@ async function updateMachineStatus(status, orders, stopDetails, machineDetails) 
             const element = document.getElementById(id);
             if (element) element.setAttribute("visible", "false");
         }
+        updateProductionStatus(machineDetails);
+    }
+
+
+    // ver onde se encaixam durante testes
+    if(statusPercentage >= 0 && statusPercentage <= 5){
+        document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);        
+        document.getElementById("status").setAttribute("value", "INICIO DE OP"); //pode ser "INICIO DE OP" OU "TROCA DE OP"
+        document.getElementById("production-bar").setAttribute("color", "#50788a");
+        // document.getElementById("item").setAttribute("value", stopDetails.name);
+        updateProductionStatus(machineDetails);
+    }
+
+    if(statusPercentage > 95){
+        document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);        
+        document.getElementById("status").setAttribute("value", "TROCA DE OP"); //pode ser "INICIO DE OP" OU "TROCA DE OP"
+        document.getElementById("production-bar").setAttribute("color", "#50788a");
+        updateProductionStatus(machineDetails);
     }
 }
 
@@ -156,3 +180,49 @@ document.addEventListener('DOMContentLoaded', () => {
     initAR();
     updateMachineStatus()
 });
+
+
+// BARRA DE PRODUÇÃO ............................................................................................................
+
+// Função que calcula a produção com base na quantidade e o valor total.
+function calcStatusPercentage(machineDetails) {
+    const { quantity, quantityprod, scrapquantity: refuge } = machineDetails;
+    const total = quantityprod || 1; // Evitar divisão por zero
+
+    // Cálculo
+    if (!refuge) {
+        return Math.max(0, Math.min(100, ((quantity / total) * 100).toFixed(2))); // Limita entre 0 e 100
+    }
+    return Math.max(0, Math.min(100, (((quantity - refuge) / total) * 100).toFixed(2))); // Limita entre 0 e 100
+}
+
+
+// Função para atualizar o elemento HTML
+function updateStatusPercentage(machineDetails) {
+    const statusPercentage = calcStatusPercentage(machineDetails);
+    const element = document.getElementById("statusPercentage");
+
+    if (element) {
+        element.setAttribute("value", `${statusPercentage}%`);
+    }
+    return statusPercentage; // Retorna o valor para ser usado em outras funções, como a barra de produção
+}
+
+// Função que ajusta o tamanho da barra de produção com base no percentual
+function updateProductionBar(value) {
+    const barFill = document.getElementById("production-bar");
+
+    if (barFill) {
+        const fillScale = value / 100; // Proporção da barra em relação a 100%
+        barFill.setAttribute("scale", `${fillScale * 1.3} 0.1 0.1`); // Ajusta o tamanho na escala X
+        barFill.setAttribute("position", `${(fillScale * 1.3 / 2) - 0.65} 0 0`); // Reposiciona para manter a centralização
+    }
+}
+
+// Função principal para sincronizar statusPercentage e a barra de produção
+function updateProductionStatus(machineDetails) {
+    const statusPercentage = updateStatusPercentage(machineDetails); // Atualiza o número
+    updateProductionBar(statusPercentage); // Atualiza a barra com o mesmo valor
+}
+
+// .............................................................................................................................
