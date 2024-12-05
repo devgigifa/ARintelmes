@@ -4,9 +4,6 @@ async function initAR() {
     const components = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "nextop", "rescode", "itemtool", "item", "status"];
     const qrCodeResponse = 'D0:EF:76:44:9F:87'; //endereço de MAC
 
-
-    // D0:EF:76:45:6F:03
-
     if (qrCodeResponse) {
         try {
             const intelmountAPIResponse = await fetch(`https://intelmount.apps.intelbras.com.br/v1/resources/mount?mac=${qrCodeResponse}`);
@@ -191,9 +188,9 @@ function calcStatusPercentage(machineDetails) {
 
     // Cálculo
     if (!refuge) {
-        return Math.max(0, Math.min(100, ((quantity / total) * 100).toFixed(2))); // Limita entre 0 e 100
+        return Math.max(0, Math.min(100, ((quantity / total) * 100).toFixed(2))); 
     }
-    return Math.max(0, Math.min(100, (((quantity - refuge) / total) * 100).toFixed(2))); // Limita entre 0 e 100
+    return Math.max(0, Math.min(100, (((quantity - refuge) / total) * 100).toFixed(2))); 
 }
 
 
@@ -205,7 +202,7 @@ function updateStatusPercentage(machineDetails) {
     if (element) {
         element.setAttribute("value", `${statusPercentage}%`);
     }
-    return statusPercentage; // Retorna o valor para ser usado em outras funções, como a barra de produção
+    return statusPercentage; 
 }
 
 // Função que ajusta o tamanho da barra de produção com base no percentual
@@ -213,16 +210,16 @@ function updateProductionBar(value) {
     const barFill = document.getElementById("production-bar");
 
     if (barFill) {
-        const fillScale = value / 100; // Proporção da barra em relação a 100%
-        barFill.setAttribute("scale", `${fillScale * 1.3} 0.1 0.1`); // Ajusta o tamanho na escala X
-        barFill.setAttribute("position", `${(fillScale * 1.3 / 2) - 0.65} 0 0`); // Reposiciona para manter a centralização
+        const fillScale = value / 100; 
+        barFill.setAttribute("scale", `${fillScale * 1.3} 0.1 0.1`); 
+        barFill.setAttribute("position", `${(fillScale * 1.3 / 2) - 0.65} 0 0`);
     }
 }
 
 // Função principal para sincronizar statusPercentage e a barra de produção
 function updateProductionStatus(machineDetails) {
-    const statusPercentage = updateStatusPercentage(machineDetails); // Atualiza o número
-    updateProductionBar(statusPercentage); // Atualiza a barra com o mesmo valor
+    const statusPercentage = updateStatusPercentage(machineDetails); 
+    updateProductionBar(statusPercentage); 
 }
 
 // .............................................................................................................................
