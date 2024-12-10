@@ -2,7 +2,7 @@ async function initAR() {
     const scene = document.querySelector("#a-scene");
     scene.style.display = "block"; 
     const components = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "nextop", "rescode", "itemtool", "item", "status"];
-    const qrCodeResponse = 'D0:EF:76:44:9F:87'; //endereço de MAC
+    const qrCodeResponse = 'D0:EF:76:46:80:8F'; //endereço de MAC
 
     if (qrCodeResponse) {
         try {
@@ -21,11 +21,6 @@ async function initAR() {
                     name: data.data[0].stopDetails[0].name,
                 } : null;
 
-                // Verificar se orders existe
-                const orders = data?.data?.[0]?.stopDetails?.[0]?.orders?.currents[0]?.production;
-                // const orders = data?.data?.[0]?.stopDetails?.[0]?.orders?.currents[0]?.production || null;
-                // modificado para ver se funciona stop with orders
-
                 const machineDetails = {
                     cycletime: (data?.data[0]?.orders?.currents[0]?.item?.factor),
                     operationcode: (data?.data[0]?.orders?.currents[0]?.operationId),
@@ -41,12 +36,8 @@ async function initAR() {
                     itemname: (data?.data[0]?.orders?.currents[0]?.item?.name),
                     item: `${(data?.data[0]?.orders?.currents[0]?.item?.code)} - ${(data?.data[0]?.orders?.currents[0]?.item?.name)}`,
                     // status: (data?.data[0]?.status),
-                    // orders: data?.data?.[0]?.stopDetails?.[0]?.orders?.currents[0]?.production,
-                    // stopDetails: data?.data?.[0]?.stopDetails?.[0]
-                    // ? {
-                    //     color: data.data[0].stopDetails[0].color,
-                    //     name: data.data[0].stopDetails[0].name,
-                    // } : null,
+                    orders: data?.data[0]?.orders?.currents[0].production,
+                    // RESOLVIDO: orders dando undefined por caminho errado
                 }
                 for (const component of components) {
                     const element = document.getElementById(component);
@@ -54,7 +45,7 @@ async function initAR() {
                         element.setAttribute("value", machineDetails[component]);
                     }
                 }
-                updateMachineStatus(status, orders, stopDetails, machineDetails);
+                updateMachineStatus(status, stopDetails, machineDetails);
             }
         } catch (error) {
             console.error("Failed to fetch data:", error);
@@ -62,7 +53,7 @@ async function initAR() {
     }
 }
 
-async function updateMachineStatus(status, orders, stopDetails, machineDetails) {
+async function updateMachineStatus(status, stopDetails, machineDetails) {
     console.log("Status recebido:", status);
     console.log("Detalhes da máquina recebidos:", machineDetails);
 
@@ -74,18 +65,18 @@ async function updateMachineStatus(status, orders, stopDetails, machineDetails) 
         document.getElementById("status").setAttribute("value", "PRODUCAO");
         document.getElementById("production-bar").setAttribute("color", "##246F3C");
 
-        // if (orders === 'null') { //!orders não funciona aqui, testar se da forma atual funciona (não mudou produção por ora)
-        //     document.getElementById("item").setAttribute("value", "sem item");
-        //     const elementsToHide = [
-        //         "cycletime", "operationcode", "quantity", "quantityprod",
-        //         "scrapquantity", "perf", "goodquantity", "calcProdNum", 
-        //         "tc", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop", 
-        //     ];
-        //     for (const id of elementsToHide) {
-        //         const element = document.getElementById(id);
-        //         if (element) element.setAttribute("visible", "false");
-        //     }
-        // }
+        if (!machineDetails.orders) {
+            document.getElementById("item").setAttribute("value", "sem item");
+            const elementsToHide = [
+                "cycletime", "operationcode", "quantity", "quantityprod",
+                "scrapquantity", "perf", "goodquantity", "calcProdNum", 
+                "tc", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop", 
+            ];
+            for (const id of elementsToHide) {
+                const element = document.getElementById(id);
+                if (element) element.setAttribute("visible", "false");
+            }
+        }
         updateProductionStatus(machineDetails);
     }
 
@@ -99,29 +90,26 @@ async function updateMachineStatus(status, orders, stopDetails, machineDetails) 
         document.getElementById("production-bar").setAttribute("color", "#50788a");
         document.getElementById("item").setAttribute("value", stopDetails.name);
 
-        // if (orders === 'null') { // !orders ou stopDetails && orders.currents ou orders === 'null' ; entra, mas não sai
-        //     // Parado sem ordem
-        //     console.log('entrou em stop sem ordem')
-        //     console.log(orders) // null
-        //     console.log('orders:', orders, 'tipo:', typeof orders);
+        if (!machineDetails.orders) {
+            // Parado sem ordem
+            console.log("Entrou em parado sem ordem");
 
-
-        //     const elementsToHide = [
-        //         "cycletime", "operationcode", "quantity", "quantityprod",
-        //         "scrapquantity", "perf", "goodquantity", "calcProdNum", 
-        //         "tc", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop", "statusPercentage"
-        //     ];
+            const elementsToHide = [
+                "cycletime", "operationcode", "quantity", "quantityprod",
+                "scrapquantity", "perf", "goodquantity", "calcProdNum", 
+                "tc", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop", "statusPercentage"
+            ];
     
-        //     document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);
-        //     document.getElementById("status").setAttribute("value", "PARADO");
-        //     document.getElementById("item").setAttribute("value", stopDetails.name);
-        //     document.getElementById("production-bar").setAttribute("color", "#8f9ca4");
+            document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);
+            document.getElementById("status").setAttribute("value", "PARADO");
+            document.getElementById("item").setAttribute("value", stopDetails.name);
+            document.getElementById("production-bar").setAttribute("color", "#8f9ca4");
     
-        //     for (const id of elementsToHide) {
-        //         const element = document.getElementById(id);
-        //         if (element) element.setAttribute("visible", "false");
-        //     }
-        // }
+            for (const id of elementsToHide) {
+                const element = document.getElementById(id);
+                if (element) element.setAttribute("visible", "false");
+            }
+        }
         if (stopDetails.color === "CBDEE8") {
             document.getElementById("grandbox").setAttribute("color", "#adb3b7")
         }
