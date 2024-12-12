@@ -1,33 +1,14 @@
-
-<!-- 
-atual versão main4 para edição 
--->
-
-<!-- // Cálculo da barra de produção considerando o valor de refuge
-// const { quantity, quantityprod, scrapquantity: refuge } = machineDetails;
-// const total = quantity || 1; // Evitar divisão por zero
-
-// if (!refuge) {
-//     const calc = (quantity / total) * 100;
-//     return calc;
-// }
-// const calc = ((quantity - refuge) / total) * 100; -->
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
     <title>AR Intelmes</title>
     <link rel="icon" href="https://img.icons8.com/ios_filled/200/40C057/info.png">
+    
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    
     <script src="testeatual.js"></script>
-
-    <!-- <script>
-
-    </script> -->
 
     <style>
         #a-scene {
@@ -39,6 +20,7 @@ atual versão main4 para edição
             height: 100%;
         }
     </style>
+    
 </head>
 
 <body>
@@ -46,11 +28,10 @@ atual versão main4 para edição
         id="a-scene"
         embedded
         arjs="sourceType: webcam; debugUIEnabled: false;"
-        camera="position: 0 1.6 0; fov: 80;" init-ar initGauges productionBar
+        camera="position: 0 1.6 0; fov: 100;" init-ar initGauges
     >
 
-        <a-box
-            id="grandbox"
+        <a-box id="grandbox"
             position="0 1.25 -3"
             rotation="0 0 0"
             color="#000000"
@@ -58,8 +39,7 @@ atual versão main4 para edição
         >
         </a-box>
 
-        <a-text
-            id="hours"
+        <a-text id="hours"
             value="4 h" 
             color="white" 
             width="1.3"
@@ -69,36 +49,31 @@ atual versão main4 para edição
         >
         </a-text>
 
-        <a-text
-            id="perf"
+        <a-text id="perf"
             color="white" 
             width="1.3"
             scale="1 0.5 1" 
-            position="0.5 1.65 -2.4"
+            position="0.47 1.65 -2.4"
         >
         </a-text>
-        <a-text
-            id="itemtool"
+        <a-text id="itemtool"
             color="white" 
             width="1.3"
             scale="1 0.5 1" 
-            position="0.5 1.60 -2.4"
+            position="0.47 1.60 -2.4"
         >
         </a-text>
 
-        <a-text
-            id="rescode"
+        <a-text id="rescode"
             color="white" 
             width="1.3"
             scale="3 1.8 3" 
             position="0 1.57 -2.4" 
             align="center"
-            frustumCulled="false"        
         >
         </a-text>
 
-        <a-text
-            id="status"
+        <a-text id="status"
             color="white" 
             width="1.3"
             scale="2.3 1 2.3" 
@@ -119,7 +94,7 @@ atual versão main4 para edição
 
         <a-text 
             id="statusPercentage"
-            value="33%"
+            value=""
             color="white" 
             width="1.3"
             scale="1.5 0.9 1.5" 
@@ -132,19 +107,13 @@ atual versão main4 para edição
 
         <a-entity line="start: -0.8 1.25 -2.4; end: 0.8 1.25 -2.4; color: white"></a-entity>
 
-        <a-text 
-            value="TC" 
-            id="tc" 
-            color="white" 
+        <a-text id="tc" value="TC" color="white" 
             width="1.3"
             scale="1.2 0.8 1.2" 
-            position="-0.75 1.2 -2.4" 
-            align="center"
+            position="-0.79 1.2 -2.4" 
         >
         </a-text>
-        <a-text 
-            id="cycletime"
-            color="white" 
+        <a-text id="cycletime" color="white" 
             width="1.3"
             scale="1.2 0.8 1.2" 
             position="-0.75 1.15 -2.4" 
@@ -152,19 +121,14 @@ atual versão main4 para edição
         >
         </a-text>  
 
-        <a-text 
-            value="OP" 
-            id="op" 
-            color="white" 
+        <a-text id="op" value="OP" color="white" 
             width="1.3"
             scale="1.2 0.8 1.2" 
             position="-0.45 1.2 -2.4" 
             align="center"
         >
         </a-text>
-        <a-text 
-            id="operationcode"
-            color="white" 
+        <a-text id="operationcode" color="white" 
             width="1.3"
             scale="1.2 0.8 1.2" 
             position="-0.45 1.15 -2.4" 
@@ -172,19 +136,14 @@ atual versão main4 para edição
         >
         </a-text>  
 
-        <a-text 
-            value="QTD"
-            id="qtd"
-            color="white" 
+        <a-text id="qtd" value="QTD" color="white" 
             width="1.3"
             scale="1.2 0.8 1.2" 
             position="-0.15 1.2 -2.4" 
             align="center"
         >
         </a-text>
-        <a-text 
-            id="quantity"
-            color="white" 
+        <a-text id="quantity" color="white" 
             width="1.3"
             scale="1.2 0.8 1.2" 
             position="-0.15 1.15 -2.4" 
@@ -192,19 +151,14 @@ atual versão main4 para edição
         >
         </a-text>  
 
-        <a-text 
-            value="QTD PROD" 
-            id="qtdprod"
-            color="white" 
+        <a-text id="qtdprod" value="QTD PROD" color="white" 
             width="1.3"
             scale="1.2 0.8 1.2" 
             position="0.14 1.2 -2.4" 
             align="center"
         >
         </a-text>
-        <a-text 
-            id="quantityprod"
-            color="white" 
+        <a-text id="quantityprod" color="white" 
             width="1.3"
             scale="1.2 0.8 1.2" 
             position="0.14 1.15 -2.4" 
@@ -212,19 +166,14 @@ atual versão main4 para edição
         >
         </a-text>  
 
-        <a-text 
-            value="REF"
-            id="ref"
-            color="white" 
+        <a-text id="ref" value="REF" color="white" 
             width="1.3"
             scale="1.2 0.8 1.2" 
             position="0.40 1.2 -2.4" 
             align="center"
         >
         </a-text>
-        <a-text 
-            id="scrapquantity"
-            color="white" 
+        <a-text id="scrapquantity" color="white" 
             width="1.3"
             scale="1.2 0.8 1.2" 
             position="0.40 1.15 -2.4" 
@@ -232,9 +181,7 @@ atual versão main4 para edição
         >
         </a-text>
 
-        <a-text 
-            value="QTD BOA"
-            id="qtdboa"
+        <a-text id="qtdboa" value="QTD BOA"
             color="white" 
             width="1.3"
             scale="1.2 0.8 1.2" 
@@ -242,9 +189,7 @@ atual versão main4 para edição
             align="center" 
         >
         </a-text>
-        <a-text 
-            id="goodquantity"
-            color="white" 
+        <a-text id="goodquantity" color="white" 
             width="1.3"
             scale="1.2 0.8 1.2" 
             position="0.65 1.15 -2.4" 
@@ -254,9 +199,7 @@ atual versão main4 para edição
 
         <a-entity line="start: -0.8 1.1 -2.4; end: 0.8 1.1 -2.4; color: white" frustumCulled="false"></a-entity>
 
-        <a-text
-            id="item"
-            color="white" 
+        <a-text id="item" color="white" 
             width="1.3"
             scale="1.2 0.8 1.2" 
             position="-0.8 1.05 -2.4" 
@@ -264,9 +207,7 @@ atual versão main4 para edição
         >
         </a-text>
 
-        <a-text
-            id="nextop"
-            color="white" 
+        <a-text id="nextop" color="white" 
             width="1.3"
             scale="1.2 0.8 1.2" 
             position="-0.8 0.93 -2.4" 
@@ -279,43 +220,37 @@ atual versão main4 para edição
     <a-entity 
         id="gauges-group" frustumCulled="false" 
     >
-        <a-entity 
-            id="gauge-OEE" 
+        <a-entity id="gauge-OEE" 
             position="-1.1 0.5 -2.4"  
             scale="0.35 0.35 0.35"
         >
-            <a-ring 
-                id="ring-OEE" 
+            <a-ring id="ring-OEE" 
                 color="blue" 
                 radius-inner="0.35" 
                 radius-outer="0.45"  
                 theta-start="0" 
                 theta-length="0"
             ></a-ring>
-            <a-text 
-                id="text-OEE" 
-                value="OEE: 100%" 
+            <a-text id="text-OEE" 
+                value="OEE: 100%"
                 position="0 0.6 0" 
                 align="center" 
                 color="white"
             ></a-text>
         </a-entity>
 
-        <a-entity 
-            id="gauge-Disponibilidade" 
+        <a-entity id="gauge-Disponibilidade" 
             position="-0.4 0.5 -2.4"  
             scale="0.35 0.35 0.35"  
         >
-            <a-ring 
-                id="ring-Disponibilidade" 
+            <a-ring id="ring-Disponibilidade" 
                 color="orange" 
                 radius-inner="0.35" 
                 radius-outer="0.45"  
                 theta-start="0" 
                 theta-length="0"
             ></a-ring>
-            <a-text 
-                id="text-Disponibilidade" 
+            <a-text id="text-Disponibilidade" 
                 value="Disp: 100%" 
                 position="0 0.6 0" 
                 align="center" 
@@ -323,21 +258,18 @@ atual versão main4 para edição
             ></a-text>
         </a-entity>
 
-        <a-entity 
-            id="gauge-Performance" 
+        <a-entity id="gauge-Performance" 
             position="0.4 0.5 -2.4"  
             scale="0.35 0.35 0.35"  
         >
-            <a-ring 
-                id="ring-Performance" 
+            <a-ring id="ring-Performance" 
                 color="green" 
                 radius-inner="0.35" 
                 radius-outer="0.45"  
                 theta-start="0" 
                 theta-length="0"
             ></a-ring>
-            <a-text 
-                id="text-Performance" 
+            <a-text id="text-Performance" 
                 value="Perf: 100%" 
                 position="0 0.6 0" 
                 align="center" 
@@ -345,21 +277,18 @@ atual versão main4 para edição
             ></a-text>
         </a-entity>
 
-        <a-entity 
-            id="gauge-Qualidade" 
+        <a-entity id="gauge-Qualidade" 
             position="1.1 0.5 -2.4"  
             scale="0.35 0.35 0.35"  
         >
-            <a-ring 
-                id="ring-Qualidade" 
+            <a-ring id="ring-Qualidade" 
                 color="yellow" 
                 radius-inner="0.35" 
                 radius-outer="0.45"  
                 theta-start="0" 
                 theta-length="0"
             ></a-ring>
-            <a-text 
-                id="text-Qualidade" 
+            <a-text id="text-Qualidade" 
                 value="Qual: 100%" 
                 position="0 0.6 0" 
                 align="center" 

@@ -2,7 +2,7 @@ async function initAR() {
     const scene = document.querySelector("#a-scene");
     scene.style.display = "block"; 
     const components = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "nextop", "rescode", "itemtool", "item", "status"];
-    const qrCodeResponse = 'D0:EF:76:46:80:8F'; //endereço de MAC
+    const qrCodeResponse = 'D0:EF:76:44:A8:5B'; //endereço de MAC
 
     if (qrCodeResponse) {
         try {
@@ -54,8 +54,8 @@ async function initAR() {
 }
 
 async function updateMachineStatus(status, stopDetails, machineDetails) {
-    console.log("Status recebido:", status);
-    console.log("Detalhes da máquina recebidos:", machineDetails);
+
+    const statusPercentage = updateStatusPercentage(); // Calcula o statusPercentage
 
     if (status === "PRODUCTION") {
         // Estado: Produção
@@ -70,7 +70,7 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
             const elementsToHide = [
                 "cycletime", "operationcode", "quantity", "quantityprod",
                 "scrapquantity", "perf", "goodquantity", "calcProdNum", 
-                "tc", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop", 
+                "tc", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop", "statusPercentage"
             ];
             for (const id of elementsToHide) {
                 const element = document.getElementById(id);
@@ -102,7 +102,7 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
     
             document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);
             document.getElementById("status").setAttribute("value", "PARADO");
-            document.getElementById("item").setAttribute("value", stopDetails.name);
+            document.getElementById("tc").setAttribute("value", stopDetails.name);
             document.getElementById("production-bar").setAttribute("color", "#8f9ca4");
     
             for (const id of elementsToHide) {
@@ -142,55 +142,56 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 
     // ver onde se encaixam durante testes
     if(statusPercentage >= 0 && statusPercentage <= 5){
-        document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);        
+        document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);
         document.getElementById("status").setAttribute("value", "INICIO DE OP"); //pode ser "INICIO DE OP" OU "TROCA DE OP"
         document.getElementById("production-bar").setAttribute("color", "#50788a");
         // document.getElementById("item").setAttribute("value", stopDetails.name);
         updateProductionStatus(machineDetails);
     }
 
-    if(statusPercentage > 95){
-        document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);        
-        document.getElementById("status").setAttribute("value", "TROCA DE OP"); //pode ser "INICIO DE OP" OU "TROCA DE OP"
-        document.getElementById("production-bar").setAttribute("color", "#50788a");
-        updateProductionStatus(machineDetails);
-    }
+    // if(statusPercentage > 95){
+    //     document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);        
+    //     document.getElementById("status").setAttribute("value", "TROCA DE OP"); //pode ser "INICIO DE OP" OU "TROCA DE OP"
+    //     document.getElementById("production-bar").setAttribute("color", "#50788a");
+    //     updateProductionStatus(machineDetails);
+    // }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // const gaugesGroup = document.getElementById("gauges-group");
-    // gaugesGroup.setAttribute("visible", "true"); 
-    // initGauges();
-    // updateProductionBar(value);
+    const gaugesGroup = document.getElementById("gauges-group");
+    gaugesGroup.setAttribute("visible", "true"); 
+    initGauges();
+    updateProductionBar(value);
     initAR();
     updateMachineStatus()
+    updateStatusPercentage()
+    updateProductionBar()
+    updateProductionStatus()
 });
 
 
 // BARRA DE PRODUÇÃO ............................................................................................................
 
-// Função que calcula a produção com base na quantidade e o valor total.
-function calcStatusPercentage(machineDetails) {
-    const { quantity, quantityprod, scrapquantity: refuge } = machineDetails;
-    const total = quantityprod || 1; // Evitar divisão por zero
+// Função que calcula e atualiza o percentual de produção no elemento HTML e retorna o valor
+function updateStatusPercentage() {
+    const getValue = (id) => parseInt(document.getElementById(id)?.getAttribute("value") || 0);
 
-    // Cálculo
-    if (!refuge) {
-        return Math.max(0, Math.min(100, ((quantity / total) * 100).toFixed(2))); 
-    }
-    return Math.max(0, Math.min(100, (((quantity - refuge) / total) * 100).toFixed(2))); 
-}
+    const quantity = getValue("quantity");
+    const quantityprod = getValue("quantityprod") || 1; // Evitar divisão por zero
+    const refuge = getValue("refuge");
 
+    // Cálculo do percentual com limitação de 0 a 100
+    const percentage = refuge 
+        ? ((quantity - refuge) / quantityprod) * 100 
+        : (quantity / quantityprod) * 100;
 
-// Função para atualizar o elemento HTML
-function updateStatusPercentage(machineDetails) {
-    const statusPercentage = calcStatusPercentage(machineDetails);
+    const finalPercentage = Math.max(0, Math.min(100, percentage.toFixed(2))); // Limita entre 0 e 100
+
+    // Atualiza o elemento HTML de statusPercentage
     const element = document.getElementById("statusPercentage");
+    element?.setAttribute("value", `${finalPercentage}%`);
 
-    if (element) {
-        element.setAttribute("value", `${statusPercentage}%`);
-    }
-    return statusPercentage; 
+    return finalPercentage;
 }
 
 // Função que ajusta o tamanho da barra de produção com base no percentual
@@ -198,16 +199,85 @@ function updateProductionBar(value) {
     const barFill = document.getElementById("production-bar");
 
     if (barFill) {
-        const fillScale = value / 100; 
+        const fillScale = value / 100; // Percentual convertido para escala
         barFill.setAttribute("scale", `${fillScale * 1.3} 0.1 0.1`); 
-        barFill.setAttribute("position", `${(fillScale * 1.3 / 2) - 0.65} 0 0`);
+        // barFill.setAttribute("position", `${(fillScale * 1.3 / 2) - 0.65} 0 0`); // Reposiciona para manter a barra centralizada
     }
 }
 
 // Função principal para sincronizar statusPercentage e a barra de produção
-function updateProductionStatus(machineDetails) {
-    const statusPercentage = updateStatusPercentage(machineDetails); 
-    updateProductionBar(statusPercentage); 
+function updateProductionStatus() {
+    updateProductionBar(updateStatusPercentage()); 
 }
 
-// .............................................................................................................................
+
+
+// GAUGES ............................................................................................................
+
+// Inicializa os gauges
+function initGauges() {
+    let OEEValue = 100, DispValue = 100, PerfValue = 100, QualValue = 100;
+
+    setInterval(() => {
+        simulateGaugeChange('text-OEE', 'ring-OEE', OEEValue);
+        simulateGaugeChange('text-Disponibilidade', 'ring-Disponibilidade', DispValue);
+        simulateGaugeChange('text-Performance', 'ring-Performance', PerfValue);
+        simulateGaugeChange('text-Qualidade', 'ring-Qualidade', QualValue);
+    }, 5000); // A cada 5 segundos, simula uma nova atualização de todos os gauges
+}
+
+// Função para gerar um valor aleatório entre dois números
+function getRandomValue(min, max) {
+    return Math.random() * (max - min) + min;
+}
+
+// Atualiza os gauges gradualmente
+function simulateGaugeChange(textId, ringId, currentValue) {
+    const newValue = getRandomValue(0, 100); // Gera um novo valor aleatório
+    let step = (newValue - currentValue) / 100; // Define o passo de mudança gradual
+
+    const interval = setInterval(() => {
+        if (Math.abs(newValue - currentValue) < Math.abs(step)) {
+            currentValue = newValue; // Finaliza o valor
+            clearInterval(interval);
+        } else {
+            currentValue += step; // Atualiza gradualmente
+        }
+        updateGauge(currentValue, textId, ringId);
+    }, 50); // Atualiza a cada 50ms para uma transição suave
+}
+
+
+// Atualiza os gauges
+function updateGauge(value, textId, ringId) {
+    const textEntity = document.getElementById(textId);
+    const ringEntity = document.getElementById(ringId);
+
+    if (textEntity && ringEntity) {
+        textEntity.setAttribute('value', textId.split('-')[1] + ': ' + Math.round(value) + '%');
+
+        const greenValue = Math.floor((value / 100) * 255);
+        const redValue = 255 - greenValue;
+        const color = `rgb(${redValue}, ${greenValue}, 0)`;
+        ringEntity.setAttribute('color', color);
+
+        const thetaLength = (value / 100) * 360;
+        ringEntity.setAttribute('theta-length', thetaLength);
+    } else {
+        alert("Element not found:", textId, ringId);
+    }
+}
+
+
+// TESTE
+
+// async function initGauges() {
+//     const qrCodeResponse = 'D0:EF:76:44:A8:5B'; //endereço de MAC
+
+//     if (qrCodeResponse) {
+//         try {
+//             const intelmountAPIResponse = await fetch(`https://intelcalc.apps.intelbras.com.br/v1/oee/time?mac=${qrCodeResponse}`);
+//             if (intelcalcAPIResponse.ok) {
+//                 const data = await intelcalcAPIResponse.json();
+
+
