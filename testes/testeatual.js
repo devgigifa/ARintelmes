@@ -2,7 +2,7 @@ async function initAR() {
     const scene = document.querySelector("#a-scene");
     scene.style.display = "block"; 
     const components = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "nextop", "rescode", "itemtool", "item", "status"];
-    const qrCodeResponse = 'D0:EF:76:44:A8:5B'; //endereço de MAC
+    const qrCodeResponse = 'D0:EF:76:46:76:BB'; //endereço de MAC
 
     if (qrCodeResponse) {
         try {
@@ -12,15 +12,10 @@ async function initAR() {
 
                 const status = (data?.data[0]?.status)
 
-// RESOLVIDO; não entra em produção porque dá erro em stopDetails, por não existir no status produção. Rever lógica e ajustar. 
-// erro no console: checkpoint.html:88 Failed to fetch data: TypeError: Cannot read properties of undefined (reading '0') at initAR (checkpoint.html:74:58)
                 // Verificar se stopDetails existe
-                const stopDetails = data?.data?.[0]?.stopDetails?.[0]
-                ? {
-                    color: data.data[0].stopDetails[0].color,
-                    name: data.data[0].stopDetails[0].name,
-                } : null;
-
+                const stopDetails = data?.data?.[0]?.stopDetails?.[0] ? { color: data.data[0].stopDetails[0].color, name: data.data[0].stopDetails[0].name } : null;
+                // RESOLVIDO; não entra em produção porque dá erro em stopDetails, por não existir no status produção. Rever lógica e ajustar. erro no console: checkpoint.html:88 Failed to fetch data: TypeError: Cannot read properties of undefined (reading '0') at initAR (checkpoint.html:74:58)
+                
                 const machineDetails = {
                     cycletime: (data?.data[0]?.orders?.currents[0]?.item?.factor),
                     operationcode: (data?.data[0]?.orders?.currents[0]?.operationId),
@@ -55,10 +50,10 @@ async function initAR() {
 
 async function updateMachineStatus(status, stopDetails, machineDetails) {
 
-    const statusPercentage = updateStatusPercentage(); // Calcula o statusPercentage
+    const statusPercentage = updateStatusPercentage();
 
+    // PRODUÇÃO
     if (status === "PRODUCTION") {
-        // Estado: Produção
         console.log("Entrou em produção");
 
         document.getElementById("grandbox").setAttribute("color", "#00a335");
@@ -80,13 +75,12 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
         updateProductionStatus(machineDetails);
     }
 
-
+    // PARADO
     if (status === "STOP" ) {
-        // Estado: Parado
         console.log("Entrou em parada");
 
         document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);        
-        document.getElementById("status").setAttribute("value", "PARADO"); //pode ser "INICIO DE OP" OU "TROCA DE OP"
+        document.getElementById("status").setAttribute("value", "PARADO");
         document.getElementById("production-bar").setAttribute("color", "#50788a");
         document.getElementById("item").setAttribute("value", stopDetails.name);
 
@@ -94,11 +88,7 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
             // Parado sem ordem
             console.log("Entrou em parado sem ordem");
 
-            const elementsToHide = [
-                "cycletime", "operationcode", "quantity", "quantityprod",
-                "scrapquantity", "perf", "goodquantity", "calcProdNum", 
-                "tc", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop", "statusPercentage"
-            ];
+            const elementsToHide = [ "cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "perf", "goodquantity", "calcProdNum", "tc", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop", "statusPercentage"  ];
     
             document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);
             document.getElementById("status").setAttribute("value", "PARADO");
@@ -116,16 +106,11 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
         updateProductionStatus(machineDetails);
     } 
 
-
+    // INATIVO
     if (status === "INACTIVE") {
-        // Estado: Fora de Turno
         console.log("Entrou em inativo");
 
-        const elementsToHide = [
-            "cycletime", "operationcode", "quantity", "quantityprod",
-            "scrapquantity", "perf", "goodquantity", "calcProdNum", 
-            "tc", "op", "qtd", "qtdboa", "qtdprod", "ref"
-        ];
+        const elementsToHide = [  "cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "perf", "goodquantity", "calcProdNum", "tc", "op", "qtd", "qtdboa", "qtdprod", "ref"  ];
 
         document.getElementById("grandbox").setAttribute("color", "#adb3b7");
         document.getElementById("status").setAttribute("value", "INATIVO");
@@ -139,8 +124,7 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
         updateProductionStatus(machineDetails);
     }
 
-
-    // ver onde se encaixam durante testes
+    // INICIO DE OP - TESTAR
     if(statusPercentage >= 0 && statusPercentage <= 5){
         document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);
         document.getElementById("status").setAttribute("value", "INICIO DE OP"); //pode ser "INICIO DE OP" OU "TROCA DE OP"
@@ -149,6 +133,7 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
         updateProductionStatus(machineDetails);
     }
 
+    // TROCA DE OP - TESTAR
     // if(statusPercentage > 95){
     //     document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);        
     //     document.getElementById("status").setAttribute("value", "TROCA DE OP"); //pode ser "INICIO DE OP" OU "TROCA DE OP"
@@ -158,8 +143,6 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    const gaugesGroup = document.getElementById("gauges-group");
-    gaugesGroup.setAttribute("visible", "true"); 
     initGauges();
     updateProductionBar(value);
     initAR();
@@ -167,86 +150,92 @@ document.addEventListener('DOMContentLoaded', () => {
     updateStatusPercentage()
     updateProductionBar()
     updateProductionStatus()
+    // initTime()
 });
 
 
 // BARRA DE PRODUÇÃO ............................................................................................................
 
-// Função que calcula e atualiza o percentual de produção no elemento HTML e retorna o valor
+// função que calcula e atualiza o percentual de produção no elemento html e retorna o valor
 function updateStatusPercentage() {
     const getValue = (id) => parseInt(document.getElementById(id)?.getAttribute("value") || 0);
-
     const quantity = getValue("quantity");
     const quantityprod = getValue("quantityprod") || 1; // Evitar divisão por zero
     const refuge = getValue("refuge");
-
-    // Cálculo do percentual com limitação de 0 a 100
-    const percentage = refuge 
-        ? ((quantity - refuge) / quantityprod) * 100 
-        : (quantity / quantityprod) * 100;
-
+    // calculo do percentual limitando entre 0 a 100
+    const percentage = refuge ? ((quantity - refuge) / quantityprod) * 100 : (quantity / quantityprod) * 100;
     const finalPercentage = Math.max(0, Math.min(100, percentage.toFixed(2))); // Limita entre 0 e 100
-
-    // Atualiza o elemento HTML de statusPercentage
+    // atualiza o elemento html
     const element = document.getElementById("statusPercentage");
     element?.setAttribute("value", `${finalPercentage}%`);
-
     return finalPercentage;
 }
 
-// Função que ajusta o tamanho da barra de produção com base no percentual
+// função que ajusta o tamanho da barra de produção com base no percentual
 function updateProductionBar(value) {
     const barFill = document.getElementById("production-bar");
 
     if (barFill) {
         const fillScale = value / 100; // Percentual convertido para escala
         barFill.setAttribute("scale", `${fillScale * 1.3} 0.1 0.1`); 
-        // barFill.setAttribute("position", `${(fillScale * 1.3 / 2) - 0.65} 0 0`); // Reposiciona para manter a barra centralizada
     }
 }
 
-// Função principal para sincronizar statusPercentage e a barra de produção
+// função principal para sincronizar statusPercentage e a barra de produção
 function updateProductionStatus() {
     updateProductionBar(updateStatusPercentage()); 
 }
 
 
-
 // GAUGES ............................................................................................................
 
-// Inicializa os gauges
-function initGauges() {
-    let OEEValue = 100, DispValue = 100, PerfValue = 100, QualValue = 100;
+async function initGauges() {
+    const components = ["performance", "quality", "available", "oee"];
+    const qrCodeResponse = 'D0:EF:76:45:6F:03'; // endereço de MAC
 
-    setInterval(() => {
-        simulateGaugeChange('text-OEE', 'ring-OEE', OEEValue);
-        simulateGaugeChange('text-Disponibilidade', 'ring-Disponibilidade', DispValue);
-        simulateGaugeChange('text-Performance', 'ring-Performance', PerfValue);
-        simulateGaugeChange('text-Qualidade', 'ring-Qualidade', QualValue);
-    }, 5000); // A cada 5 segundos, simula uma nova atualização de todos os gauges
-}
+    if (qrCodeResponse) {
+        try {
+            // const intelcalcAPIResponse = await fetch(https://intelcalc.apps.intelbras.com.br/v1/oee/time?mac=${qrCodeResponse});
+            const intelcalcAPIResponse = await fetch(`https://intelcalc.apps.intelbras.com.br/v1/oee/time?dateEnd=${dateEnd}&dateStart=${dateStart}&resCode=${resCode}&onlyPerf=false`);
+            if (intelcalcAPIResponse.ok) {
+                const data = await intelcalcAPIResponse.json();
+                const gaugeDetails = {
+                    performance: data?.data?.performance,
+                    quality: data?.data?.quality,
+                    available: data?.data?.available,
+                    oee: data?.data?.oee,
+                };
 
-// Função para gerar um valor aleatório entre dois números
-function getRandomValue(min, max) {
-    return Math.random() * (max - min) + min;
-}
+                // console.log(`Performance: ${gaugeDetails.performance}`);
+                // console.log(`Quality: ${gaugeDetails.quality}`);
+                // console.log(`Available: ${gaugeDetails.available}`);
+                // console.log(`OEE: ${gaugeDetails.oee}`);
 
-// Atualiza os gauges gradualmente
-function simulateGaugeChange(textId, ringId, currentValue) {
-    const newValue = getRandomValue(0, 100); // Gera um novo valor aleatório
-    let step = (newValue - currentValue) / 100; // Define o passo de mudança gradual
+                // Atualiza os componentes com os valores
+                components.forEach((component) => {
+                    const elementText = document.getElementById(`text-${component}`);
+                    const elementRing = document.getElementById(`ring-${component}`);
+                    const value = gaugeDetails[component];
 
-    const interval = setInterval(() => {
-        if (Math.abs(newValue - currentValue) < Math.abs(step)) {
-            currentValue = newValue; // Finaliza o valor
-            clearInterval(interval);
-        } else {
-            currentValue += step; // Atualiza gradualmente
+                    if (elementText && elementRing) {
+                        updateGauge(value, `text-${component}`, `ring-${component}`);
+                    } else {
+                        console.error(`Element not found for ${component}`);
+                    }
+                });
+                // Simula atualizações periódicas a cada 5 segundos (se necessário)
+                setInterval(() => {
+                    components.forEach((component) => {
+                        const value = gaugeDetails[component];
+                        updateGauge(value, `text-${component}`, `ring-${component}`);
+                    });
+                }, 5000);
+            }
+        } catch (error) {
+            console.error("Failed to fetch data:", error);
         }
-        updateGauge(currentValue, textId, ringId);
-    }, 50); // Atualiza a cada 50ms para uma transição suave
+    }
 }
-
 
 // Atualiza os gauges
 function updateGauge(value, textId, ringId) {
@@ -254,30 +243,79 @@ function updateGauge(value, textId, ringId) {
     const ringEntity = document.getElementById(ringId);
 
     if (textEntity && ringEntity) {
-        textEntity.setAttribute('value', textId.split('-')[1] + ': ' + Math.round(value) + '%');
-
+        // atualiza o texto exibido no gauge
+        textEntity.setAttribute('value', `${textId.split('-')[1]}: ${Math.round(value)}%`);
+        // calcula a cor do anel
         const greenValue = Math.floor((value / 100) * 255);
         const redValue = 255 - greenValue;
         const color = `rgb(${redValue}, ${greenValue}, 0)`;
         ringEntity.setAttribute('color', color);
-
-        const thetaLength = (value / 100) * 360;
-        ringEntity.setAttribute('theta-length', thetaLength);
+        // atualiza o anel
+        const length = (value / 100) * 360;
+        ringEntity.setAttribute('theta-length', length);
     } else {
-        alert("Element not found:", textId, ringId);
+        console.error(`Element with id '${textId}' or '${ringId}' not found.`);
+    }
+}
+// TIME .....................................................................................................
+
+async function initTime() {
+    // const components = ["id", "dateStart", "dateEnd", "date", "shift", "resCode"];
+    const qrCodeResponse = 'D0:EF:76:45:6F:03'; // endereço de MAC
+
+    if (qrCodeResponse) {
+        try {
+            const intelcalcAPIResponse = await fetch(`https://intelcalc.apps.intelbras.com.br/v1/resources/MFAP1-01/aps/calendar/productive?date=2024-12-12T13:54:05-03:00`);
+            console.log("Resposta da API:", intelcalcAPIResponse);
+
+            if (intelcalcAPIResponse.ok) {
+                const data = await intelcalcAPIResponse.json();
+                console.log("Dados da API:", data);
+
+                const timeDetails = {
+                    id: data?.data?.id,
+                    dateStart: data?.data?.dateStart,
+                    dateEnd: data?.data?.dateEnd,
+                    date: data?.data?.date,
+                    shift: data?.data?.shift,
+                    resCode: data?.data?.resCode,
+                };
+
+                // calcular o tempo de operação da máquina
+                const startDate = new Date(timeDetails.dateStart);
+                const endDate = new Date(timeDetails.dateEnd);
+                const operation = (endDate - startDate) / 60000; // Em minutos
+
+                // converter a duração para horas e minutos
+                const hours = Math.floor(operation / 60); // Horas
+                const minutes = Math.floor(operation % 60); // Minutos restantes
+                let duration;
+                if (hours > 0) {
+                    duration = `${hours} h`;
+                } else {
+                    duration = `${minutes} min`;
+                }
+
+                console.log(`A máquina funcionou por ${duration}.`);
+
+                // atualizar valor do elemento
+                const hoursElement = document.getElementById("hours");
+                if (hoursElement) {
+                    hoursElement.setAttribute("value", duration); 
+                } else {
+                    console.error("Elemento com id 'hours' não encontrado.");
+                }
+
+            } else {
+                console.error("Erro ao buscar dados da API:", intelcalcAPIResponse.status);
+            }
+        } catch (error) {
+            console.error("Erro ao processar os dados:", error);
+        }
     }
 }
 
-
-// TESTE
-
-// async function initGauges() {
-//     const qrCodeResponse = 'D0:EF:76:44:A8:5B'; //endereço de MAC
-
-//     if (qrCodeResponse) {
-//         try {
-//             const intelmountAPIResponse = await fetch(`https://intelcalc.apps.intelbras.com.br/v1/oee/time?mac=${qrCodeResponse}`);
-//             if (intelcalcAPIResponse.ok) {
-//                 const data = await intelcalcAPIResponse.json();
-
-
+// Chamando a função após a carga do DOM
+document.addEventListener('DOMContentLoaded', () => {
+    initTime();
+});
