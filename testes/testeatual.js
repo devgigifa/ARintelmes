@@ -195,8 +195,8 @@ async function initGauges() {
 
     if (qrCodeResponse) {
         try {
-            // const intelcalcAPIResponse = await fetch(https://intelcalc.apps.intelbras.com.br/v1/oee/time?mac=${qrCodeResponse});
-            const intelcalcAPIResponse = await fetch(`https://intelcalc.apps.intelbras.com.br/v1/oee/time?dateEnd=${dateEnd}&dateStart=${dateStart}&resCode=${resCode}&onlyPerf=false`);
+            // const intelcalcAPIResponse = await fetch(`https://intelcalc.apps.intelbras.com.br/v1/oee/time?dateEnd=${dateEnd}&dateStart=${dateStart}&resCode=${resCode}&onlyPerf=false`);
+            const intelcalcAPIResponse = await fetch(`https://intelcalc.apps.intelbras.com.br/v1/oee/time?dateEnd=2024-12-12T16:54:06.471Z&dateStart=2024-12-12T08:50:00.000Z&resCode=MFAP1-01&onlyPerf=false`);
             if (intelcalcAPIResponse.ok) {
                 const data = await intelcalcAPIResponse.json();
                 const gaugeDetails = {
@@ -223,13 +223,13 @@ async function initGauges() {
                         console.error(`Element not found for ${component}`);
                     }
                 });
-                // Simula atualizações periódicas a cada 5 segundos (se necessário)
+                // Simula atualizações periódicas a cada 10 segundos (se necessário)
                 setInterval(() => {
                     components.forEach((component) => {
                         const value = gaugeDetails[component];
                         updateGauge(value, `text-${component}`, `ring-${component}`);
                     });
-                }, 5000);
+                }, 10000);
             }
         } catch (error) {
             console.error("Failed to fetch data:", error);
@@ -262,14 +262,14 @@ function updateGauge(value, textId, ringId) {
 async function initTime() {
     // const components = ["id", "dateStart", "dateEnd", "date", "shift", "resCode"];
     const qrCodeResponse = 'D0:EF:76:45:6F:03'; // endereço de MAC
-
     if (qrCodeResponse) {
         try {
-            const intelcalcAPIResponse = await fetch(`https://intelcalc.apps.intelbras.com.br/v1/resources/MFAP1-01/aps/calendar/productive?date=2024-12-12T13:54:05-03:00`);
-            console.log("Resposta da API:", intelcalcAPIResponse);
+            const productiveDateAps = await fetch(`https://intelcalc.apps.intelbras.com.br/v1/resources/MFAP1-01/aps/calendar/productive?date=2024-12-12T13:54:05-03:00`);
+            // const productiveDateAps =  await fetch(`https://intelcalc.apps.intelbras.com.br/v1/resources/${resCode}/aps/calendar/productive?date=${new Date().toISOString()}`);
+            console.log("Resposta da API:", productiveDateAps);
 
-            if (intelcalcAPIResponse.ok) {
-                const data = await intelcalcAPIResponse.json();
+            if (productiveDateAps.ok) {
+                const data = await productiveDateAps.json();
                 console.log("Dados da API:", data);
 
                 const timeDetails = {
@@ -307,7 +307,7 @@ async function initTime() {
                 }
 
             } else {
-                console.error("Erro ao buscar dados da API:", intelcalcAPIResponse.status);
+                console.error("Erro ao buscar dados da API:", productiveDateAps.status);
             }
         } catch (error) {
             console.error("Erro ao processar os dados:", error);

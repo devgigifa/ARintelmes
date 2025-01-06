@@ -5,7 +5,7 @@ let activeMarker = null;
 async function handleMarkerDetection(markerId) {
     if (activeMarker) {
         console.log(`Another marker (${activeMarker}) is already being processed.`);
-        retur
+        return
     }
 
     activeMarker = markerId;
