@@ -2,7 +2,7 @@ async function initAR() {
     const scene = document.querySelector("#a-scene");
     scene.style.display = "block"; 
     const components = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "nextop", "rescode", "itemtool", "item", "status"];
-    const qrCodeResponse = 'D0:EF:76:46:76:BB'; //endereço de MAC
+    const qrCodeResponse = 'D0:EF:76:45:ED:DF'; //endereço de MAC
 
     if (qrCodeResponse) {
         try {
@@ -125,13 +125,13 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
     }
 
     // INICIO DE OP - TESTAR
-    if(statusPercentage >= 0 && statusPercentage <= 5){
-        document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);
-        document.getElementById("status").setAttribute("value", "INICIO DE OP"); //pode ser "INICIO DE OP" OU "TROCA DE OP"
-        document.getElementById("production-bar").setAttribute("color", "#50788a");
-        // document.getElementById("item").setAttribute("value", stopDetails.name);
-        updateProductionStatus(machineDetails);
-    }
+    // if(statusPercentage >= 0 && statusPercentage <= 5){
+    //     document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);
+    //     document.getElementById("status").setAttribute("value", "INICIO DE OP"); //pode ser "INICIO DE OP" OU "TROCA DE OP"
+    //     document.getElementById("production-bar").setAttribute("color", "#50788a");
+    //     // document.getElementById("item").setAttribute("value", stopDetails.name);
+    //     updateProductionStatus(machineDetails);
+    // }
 
     // TROCA DE OP - TESTAR
     // if(statusPercentage > 95){
@@ -144,7 +144,7 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 
 document.addEventListener('DOMContentLoaded', () => {
     initGauges();
-    updateProductionBar(value);
+    updateProductionBar();
     initAR();
     updateMachineStatus()
     updateStatusPercentage()
