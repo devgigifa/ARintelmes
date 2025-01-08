@@ -1,308 +1,213 @@
-
-function initAR() {
+async function initAR() {
     const scene = document.querySelector("#a-scene");
     scene.style.display = "block"; 
-}
+    const components = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "nextop", "rescode", "itemtool", "item", "status"];
+    const qrCodeResponse = 'D0:EF:76:46:80:8F'; //endereço de MAC
 
-// AFRAME.registerComponent("maintenance-cursor", {
-//     init: function () {
-//         const el = this.el;
-//         const factText = document.getElementById("fact-text");
-//         let fact = "";
+    if (qrCodeResponse) {
+        try {
+            const intelmountAPIResponse = await fetch(`https://intelmount.apps.intelbras.com.br/v1/resources/mount?mac=${qrCodeResponse}`);
+            if (intelmountAPIResponse.ok) {
+                const data = await intelmountAPIResponse.json();
 
-//         fetch("https://cors-anywhere.herokuapp.com/http://numbersapi.com/random/trivia")
-//             .then((response) => response.text())
-//             .then((data) => {
-//                 fact = data;
-//             })
-//             .catch((error) => alert("Erro ao conectar à API:", error));
+                const status = (data?.data[0]?.status)
 
-//         el.addEventListener("click", function () {
-//             factText.setAttribute("value", fact);
-//         });
-//     },
-// });
+// RESOLVIDO; não entra em produção porque dá erro em stopDetails, por não existir no status produção. Rever lógica e ajustar. 
+// erro no console: checkpoint.html:88 Failed to fetch data: TypeError: Cannot read properties of undefined (reading '0') at initAR (checkpoint.html:74:58)
+                // Verificar se stopDetails existe
+                const stopDetails = data?.data?.[0]?.stopDetails?.[0]
+                ? {
+                    color: data.data[0].stopDetails[0].color,
+                    name: data.data[0].stopDetails[0].name,
+                } : null;
 
-AFRAME.registerComponent("status-cursor", {
-    init: function () {
-        document.addEventListener('DOMContentLoaded', () => {
-            const gaugesGroup = document.getElementById("gauges-group");
-            gaugesGroup.setAttribute("visible", "false"); // Esconde os gauges no início
-            initializeGauges(); // Inicializa os gauges
-            simulateProductionBarChange();
-
-            // Adiciona o evento de clique para o botão de Status
-            const statusButton = document.getElementById("status-button");
-            statusButton.addEventListener("click", function () {
-                console.log("Botão clicado!");
-                const isVisible = gaugesGroup.getAttribute("visible") === "true";
-                gaugesGroup.setAttribute("visible", !isVisible);
-                console.log("Gauges visibility:", !isVisible);
-            });
-        });
-    },
-});
-
-// FUNCTION GAUGES
-
-// Função para gerar um valor aleatório entre dois números
-function getRandomValue(min, max) {
-    return Math.random() * (max - min) + min;
-}
-
-// Atualiza os gauges gradualmente
-function simulateGaugeChange(textId, ringId, currentValue) {
-    const newValue = getRandomValue(0, 100); // Gera um novo valor aleatório
-    let step = (newValue - currentValue) / 100; // Define o passo de mudança gradual
-
-    const interval = setInterval(() => {
-        if (Math.abs(newValue - currentValue) < Math.abs(step)) {
-            currentValue = newValue; // Finaliza o valor
-            clearInterval(interval);
-        } else {
-            currentValue += step; // Atualiza gradualmente
+                const machineDetails = {
+                    cycletime: (data?.data[0]?.orders?.currents[0]?.item?.factor),
+                    operationcode: (data?.data[0]?.orders?.currents[0]?.operationId),
+                    quantity: (data?.data[0]?.orders?.currents[0]?.production?.meta),
+                    quantityprod: (data?.data[0]?.orders?.currents[0]?.production?.current),
+                    scrapquantity: (data?.data[0]?.orders?.currents[0]?.production?.refuge),
+                    goodquantity: ((data?.data[0]?.orders?.currents[0]?.production?.current) - (data?.data[0]?.orders?.currents[0]?.production?.refuge)),
+                    perf: data?.data[0]?.orders?.currents[0]?.perf ? `perf: ${(data?.data[0]?.orders?.currents[0]?.perf).toFixed(2)}%` : "N/A",
+                    // RESOLVIDO; perf não dá erro quando em status produção, dando erro quando entra em status stop: testeatual.js:70 Failed to fetch data: TypeError: Cannot read properties of undefined (reading 'toFixed') at initAR (testeatual.js:47:79)
+                    nextop: `Proxima OP: ${"5607040-2"}`,
+                    rescode: (data?.data?.[0].code),
+                    itemtool: (data?.data[0]?.orders?.currents[0]?.item?.tool),
+                    itemname: (data?.data[0]?.orders?.currents[0]?.item?.name),
+                    item: `${(data?.data[0]?.orders?.currents[0]?.item?.code)} - ${(data?.data[0]?.orders?.currents[0]?.item?.name)}`,
+                    // status: (data?.data[0]?.status),
+                    orders: data?.data[0]?.orders?.currents[0].production,
+                    // RESOLVIDO: orders dando undefined por caminho errado
+                }
+                for (const component of components) {
+                    const element = document.getElementById(component);
+                    if (element) {
+                        element.setAttribute("value", machineDetails[component]);
+                    }
+                }
+                updateMachineStatus(status, stopDetails, machineDetails);
+            }
+        } catch (error) {
+            console.error("Failed to fetch data:", error);
         }
-        updateGauge(currentValue, textId, ringId);
-    }, 50); // Atualiza a cada 50ms para uma transição suave
-}
-
-// Inicializa os gauges
-function initializeGauges() {
-    let OEEValue = 100, DispValue = 100, PerfValue = 100, QualValue = 100;
-
-    setInterval(() => {
-        simulateGaugeChange('text-OEE', 'ring-OEE', OEEValue);
-        simulateGaugeChange('text-Disponibilidade', 'ring-Disponibilidade', DispValue);
-        simulateGaugeChange('text-Performance', 'ring-Performance', PerfValue);
-        simulateGaugeChange('text-Qualidade', 'ring-Qualidade', QualValue);
-    }, 5000); // A cada 5 segundos, simula uma nova atualização de todos os gauges
-}
-
-// Atualiza os gauges
-function updateGauge(value, textId, ringId) {
-    const textEntity = document.getElementById(textId);
-    const ringEntity = document.getElementById(ringId);
-
-    if (textEntity && ringEntity) {
-        textEntity.setAttribute('value', textId.split('-')[1] + ': ' + Math.round(value) + '%');
-
-        const greenValue = Math.floor((value / 100) * 255);
-        const redValue = 255 - greenValue;
-        const color = `rgb(${redValue}, ${greenValue}, 0)`;
-        ringEntity.setAttribute('color', color);
-
-        const thetaLength = (value / 100) * 360;
-        ringEntity.setAttribute('theta-length', thetaLength);
-    } else {
-        alert("Element not found:", textId, ringId);
     }
 }
 
-// Funções que atualizam a barra de preenchimento para manter a escala correta
+async function updateMachineStatus(status, stopDetails, machineDetails) {
+    console.log("Status recebido:", status);
+    console.log("Detalhes da máquina recebidos:", machineDetails);
+
+    if (status === "PRODUCTION") {
+        // Estado: Produção
+        console.log("Entrou em produção");
+
+        document.getElementById("grandbox").setAttribute("color", "#00a335");
+        document.getElementById("status").setAttribute("value", "PRODUCAO");
+        document.getElementById("production-bar").setAttribute("color", "##246F3C");
+
+        if (!machineDetails.orders) {
+            document.getElementById("item").setAttribute("value", "sem item");
+            const elementsToHide = [
+                "cycletime", "operationcode", "quantity", "quantityprod",
+                "scrapquantity", "perf", "goodquantity", "calcProdNum", 
+                "tc", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop", 
+            ];
+            for (const id of elementsToHide) {
+                const element = document.getElementById(id);
+                if (element) element.setAttribute("visible", "false");
+            }
+        }
+        updateProductionStatus(machineDetails);
+    }
+
+
+    if (status === "STOP" ) {
+        // Estado: Parado
+        console.log("Entrou em parada");
+
+        document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);        
+        document.getElementById("status").setAttribute("value", "PARADO"); //pode ser "INICIO DE OP" OU "TROCA DE OP"
+        document.getElementById("production-bar").setAttribute("color", "#50788a");
+        document.getElementById("item").setAttribute("value", stopDetails.name);
+
+        if (!machineDetails.orders) {
+            // Parado sem ordem
+            console.log("Entrou em parado sem ordem");
+
+            const elementsToHide = [
+                "cycletime", "operationcode", "quantity", "quantityprod",
+                "scrapquantity", "perf", "goodquantity", "calcProdNum", 
+                "tc", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop", "statusPercentage"
+            ];
+    
+            document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);
+            document.getElementById("status").setAttribute("value", "PARADO");
+            document.getElementById("item").setAttribute("value", stopDetails.name);
+            document.getElementById("production-bar").setAttribute("color", "#8f9ca4");
+    
+            for (const id of elementsToHide) {
+                const element = document.getElementById(id);
+                if (element) element.setAttribute("visible", "false");
+            }
+        }
+        if (stopDetails.color === "CBDEE8") {
+            document.getElementById("grandbox").setAttribute("color", "#adb3b7")
+        }
+        updateProductionStatus(machineDetails);
+    } 
+
+
+    if (status === "INACTIVE") {
+        // Estado: Fora de Turno
+        console.log("Entrou em inativo");
+
+        const elementsToHide = [
+            "cycletime", "operationcode", "quantity", "quantityprod",
+            "scrapquantity", "perf", "goodquantity", "calcProdNum", 
+            "tc", "op", "qtd", "qtdboa", "qtdprod", "ref"
+        ];
+
+        document.getElementById("grandbox").setAttribute("color", "#adb3b7");
+        document.getElementById("status").setAttribute("value", "INATIVO");
+        document.getElementById("item").setAttribute("value", "FORA DE TURNO: MAQUINA DESLIGADA PLANEJADA");
+        document.getElementById("production-bar").setAttribute("color", "#8f9ca4");
+
+        for (const id of elementsToHide) {
+            const element = document.getElementById(id);
+            if (element) element.setAttribute("visible", "false");
+        }
+        updateProductionStatus(machineDetails);
+    }
+
+
+    // ver onde se encaixam durante testes
+    if(statusPercentage >= 0 && statusPercentage <= 5){
+        document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);        
+        document.getElementById("status").setAttribute("value", "INICIO DE OP"); //pode ser "INICIO DE OP" OU "TROCA DE OP"
+        document.getElementById("production-bar").setAttribute("color", "#50788a");
+        // document.getElementById("item").setAttribute("value", stopDetails.name);
+        updateProductionStatus(machineDetails);
+    }
+
+    if(statusPercentage > 95){
+        document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);        
+        document.getElementById("status").setAttribute("value", "TROCA DE OP"); //pode ser "INICIO DE OP" OU "TROCA DE OP"
+        document.getElementById("production-bar").setAttribute("color", "#50788a");
+        updateProductionStatus(machineDetails);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // const gaugesGroup = document.getElementById("gauges-group");
+    // gaugesGroup.setAttribute("visible", "true"); 
+    // initGauges();
+    // updateProductionBar(value);
+    initAR();
+    updateMachineStatus()
+});
+
+
+// BARRA DE PRODUÇÃO ............................................................................................................
+
+// Função que calcula a produção com base na quantidade e o valor total.
+function calcStatusPercentage(machineDetails) {
+    const { quantity, quantityprod, scrapquantity: refuge } = machineDetails;
+    const total = quantityprod || 1; // Evitar divisão por zero
+
+    // Cálculo
+    if (!refuge) {
+        return Math.max(0, Math.min(100, ((quantity / total) * 100).toFixed(2))); 
+    }
+    return Math.max(0, Math.min(100, (((quantity - refuge) / total) * 100).toFixed(2))); 
+}
+
+
+// Função para atualizar o elemento HTML
+function updateStatusPercentage(machineDetails) {
+    const statusPercentage = calcStatusPercentage(machineDetails);
+    const element = document.getElementById("statusPercentage");
+
+    if (element) {
+        element.setAttribute("value", `${statusPercentage}%`);
+    }
+    return statusPercentage; 
+}
+
+// Função que ajusta o tamanho da barra de produção com base no percentual
 function updateProductionBar(value) {
-    const barFill = document.getElementById("production-bar-fill");
+    const barFill = document.getElementById("production-bar");
+
     if (barFill) {
-        // Atualiza a escala da barra de preenchimento
-        const fillScale = value / 100; // Ajusta a escala conforme o valor
-        barFill.setAttribute("scale", `${fillScale * 1.3} 0.1 0.1`); // Escala ajustada para o comprimento total
-        // Atualiza a posição da barra de preenchimento para que fique corretamente alinhada
-        barFill.setAttribute("position", `${(fillScale * 1.3 / 2) - 0.65} 0 0`); // Posiciona à frente do início
+        const fillScale = value / 100; 
+        barFill.setAttribute("scale", `${fillScale * 1.3} 0.1 0.1`); 
+        barFill.setAttribute("position", `${(fillScale * 1.3 / 2) - 0.65} 0 0`);
     }
 }
 
-// Função de simular porcentagem similar a dos gauges
-function simulateProductionBarChange() {
-    let productionValue = 0;
-    let step = 1; // Incremento para o preenchimento
-    const interval = setInterval(() => {
-        if (productionValue >= 100) {
-            productionValue = 0; // Reinicia a barra após chegar a 100%
-        } else {
-            productionValue += step; // Atualiza gradualmente
-        }
-        updateProductionBar(productionValue);
-    }, 100); // Atualiza a cada 100ms
+// Função principal para sincronizar statusPercentage e a barra de produção
+function updateProductionStatus(machineDetails) {
+    const statusPercentage = updateStatusPercentage(machineDetails); 
+    updateProductionBar(statusPercentage); 
 }
 
-
-
-// testando endpoint dos números
-
-// HORAS
-
-AFRAME.registerComponent("random-hours", {
-    init: function () {
-        const hoursNum = document.getElementById("hours");
-
-        fetch("https://www.random.org/integers/?num=1&min=0&max=150&col=1&base=10&format=plain&rnd=new")
-            .then((response) => response.text())
-            .then((data) => {
-                const hours = data.trim();
-                const hoursConcat = `${hours} h`; // Adicionar "h" ao valor
-                hoursNum.setAttribute("value", hoursConcat);
-            })
-            .catch((error) => alert("Erro ao conectar à API:", error));
-    },
-});
-
-
-// DEU CERTOOOOOO
-
-
-// STATUS MAQUINA
-AFRAME.registerComponent("random-progress", {
-    init: function () {
-        const statusNum = document.getElementById("statusNum");
-
-        fetch("https://www.random.org/integers/?num=1&min=0&max=100&col=1&base=10&format=plain&rnd=new")
-            .then((response) => response.text())
-            .then((data) => {
-                const progress = data.trim();
-                const progressConcat = `${progress} %`; // Adicionar "%" ao valor - porcentagem
-                statusNum.setAttribute("value", progressConcat);
-            })
-            .catch((error) => alert("Erro ao conectar à API:", error));
-    },
-});
-
-
-
-// TC
-AFRAME.registerComponent("random-tc", {
-    init: function () {
-        const tcElement = document.getElementById("tcNum");
-
-        fetch("https://www.random.org/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new")
-            .then((response) => response.text())
-            .then((data) => {
-                const tcValue = data.trim();
-                tcElement.setAttribute("value", tcValue);
-            })
-            .catch((error) => alert("Erro ao conectar à API:", error));
-    },
-});
-
-// OP
-AFRAME.registerComponent("random-op", {
-    init: function () {
-        const opElement = document.getElementById("opNum");
-
-        fetch("https://www.random.org/integers/?num=1&min=0&max=9999999&col=1&base=10&format=plain&rnd=new")
-            .then((response) => response.text())
-            .then((data) => {
-                const opValue = data.trim();
-                opElement.setAttribute("value", opValue);
-            })
-            .catch((error) => alert("Erro ao conectar à API:", error));
-    },
-});
-
-// Quantidade de Números
-AFRAME.registerComponent("random-quantidade", {
-    init: function () {
-        const quantidadeElement = document.getElementById("qtdNum");
-
-        fetch("https://www.random.org/integers/?num=1&min=0&max=10000&col=1&base=10&format=plain&rnd=new")
-            .then((response) => response.text())
-            .then((data) => {
-                const quantidadeValue = data.trim();
-                quantidadeElement.setAttribute("value", quantidadeValue);
-            })
-            .catch((error) => alert("Erro ao conectar à API:", error));
-    },
-});
-
-// Quantidade de Produtos
-AFRAME.registerComponent("random-qtdprod", {
-    init: function () {
-        const quantidadeProdElement = document.getElementById("qtdProdNum");
-
-        fetch("https://www.random.org/integers/?num=1&min=0&max=1000&col=1&base=10&format=plain&rnd=new")
-            .then((response) => response.text())
-            .then((data) => {
-                const quantidadeProdValue = data.trim();
-                quantidadeProdElement.setAttribute("value", quantidadeProdValue);
-            })
-            .catch((error) => alert("Erro ao conectar à API:", error));
-    },
-});
-
-// Refugo
-AFRAME.registerComponent("random-refugo", {
-    init: function () {
-        const refugoElement = document.getElementById("refugoNum");
-
-        fetch("https://www.random.org/integers/?num=1&min=0&max=1000&col=1&base=10&format=plain&rnd=new")
-            .then((response) => response.text())
-            .then((data) => {
-                const refugoValue = data.trim();
-                refugoElement.setAttribute("value", refugoValue);
-            })
-            .catch((error) => alert("Erro ao conectar à API:", error));
-    },
-});
-
-// Quantidade Boa
-AFRAME.registerComponent("random-qtdboa", {
-    init: function () {
-        const quantidadeBoaElement = document.getElementById("qtdBoaNum");
-
-        fetch("https://www.random.org/integers/?num=1&min=0&max=1000&col=1&base=10&format=plain&rnd=new")
-            .then((response) => response.text())
-            .then((data) => {
-                const quantidadeBoaValue = data.trim();
-                quantidadeBoaElement.setAttribute("value", quantidadeBoaValue);
-            })
-            .catch((error) => alert("Erro ao conectar à API:", error));
-    },
-});
-
-// Perf
-AFRAME.registerComponent("random-perf", {
-    init: function () {
-        const perfElement = document.getElementById("perf");
-
-        fetch("https://www.random.org/integers/?num=1&min=0&max=100&col=1&base=10&format=plain&rnd=new")
-            .then((response) => response.text())
-            .then((data) => {
-                const perfValue = parseFloat(data.trim()); // Converter para número
-                const formPerfValue = perfValue.toFixed(2); // Formatar para duas casas decimais
-                const perfConcat = `Perf ${formPerfValue}%`; // Adicionar "Perf" e "%"
-                perfElement.setAttribute("value", perfConcat); // Definir o valor formatado
-            })
-            .catch((error) => alert("Erro ao conectar à API:", error));
-    },
-});
-
-
-// statusMaq - retorna se está em produção, parada, manutenção
-/*
-AFRAME.registerComponent("random-maq", {
-    init: function () {
-        const wordText = document.getElementById("statusMaq");
-
-        fetch("https://random-word-api.herokuapp.com/word?number=1")
-            .then((response) => response.json()) // Altere para .json()
-            .then((data) => {
-                const word = data[0]; // A palavra está no primeiro índice
-                wordText.setAttribute("value", word); // Define o valor
-            })
-            .catch((error) => alert("Erro ao conectar à API:", error));
-    },
-});
-*/
-
-AFRAME.registerComponent("random-proxop", {
-    init: function () {
-        const proxOp = document.getElementById("proxOp");
-
-        fetch("https://www.random.org/integers/?num=1&min=0&max=999999&col=1&base=10&format=plain&rnd=new")
-            .then((response) => response.text())
-            .then((data) => {
-                const proxOpValue = data.trim(); 
-                const proxOpConcat = `Proxima OP: ${proxOpValue}`; 
-                proxOp.setAttribute("value", proxOpConcat);
-            })
-            .catch((error) => alert("Erro ao conectar à API:", error));
-    },
-});
+// .............................................................................................................................
