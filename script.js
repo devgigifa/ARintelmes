@@ -3,7 +3,7 @@ async function initAR() {
     const scene = document.querySelector("#a-scene");
     scene.style.display = "block"; 
     const components = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "nextop", "rescode", "itemtool", "item", "status"];
-    const qrCodeResponse = 'D0:EF:76:44:AE:73'; // Endereço de MAC
+    const qrCodeResponse = 'D0:EF:76:45:E8:FB'; // Endereço de MAC
 
     if (qrCodeResponse) {
         try {
@@ -178,7 +178,7 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 
         document.getElementById("grandbox").setAttribute("color", "#00a335");
         document.getElementById("status").setAttribute("value", "PRODUCAO");
-        document.getElementById("production-bar").setAttribute("color", "##246F3C");
+        document.getElementById("production-bar").setAttribute("color", "#246F3C");
 
         if (!machineDetails.orders) {
             document.getElementById("item").setAttribute("value", "sem item");
@@ -281,7 +281,7 @@ function updateStatusPercentage() {
     const quantityprod = getValue("quantityprod") || 1; // Evitar divisão por zero
     const refuge = getValue("refuge");
     // calculo do percentual limitando entre 0 a 100
-    const percentage = refuge ? ((quantity - refuge) / quantityprod) * 100 : (quantity / quantityprod) * 100;
+    const percentage = refuge ? ((quantityprod - refuge) / quantity) * 100 : (quantityprod / quantity) * 100;
     const finalPercentage = Math.max(0, Math.min(100, percentage.toFixed(2))); // Limita entre 0 e 100
     // atualiza o elemento html
     const element = document.getElementById("statusPercentage");
