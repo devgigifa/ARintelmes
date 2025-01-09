@@ -3,7 +3,7 @@ async function initAR() {
     const scene = document.querySelector("#a-scene");
     scene.style.display = "block"; 
     const components = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "nextop", "rescode", "itemtool", "item", "status"];
-    const qrCodeResponse = 'D0:EF:76:44:AE:73'; // Endereço de MAC
+    const qrCodeResponse = 'D0:EF:76:45:E8:FB'; // Endereço de MAC
 
     if (qrCodeResponse) {
         try {
@@ -157,7 +157,6 @@ function updateGauge(value, textId, ringId) {
     }
 }
 
-// Chama todas as funções na ordem correta
 document.addEventListener('DOMContentLoaded', async () => {
     const resCode = await initAR();  // Pega o rescode de initAR
     if (resCode) {
@@ -178,7 +177,7 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 
         document.getElementById("grandbox").setAttribute("color", "#00a335");
         document.getElementById("status").setAttribute("value", "PRODUCAO");
-        document.getElementById("production-bar").setAttribute("color", "##246F3C");
+        document.getElementById("production-bar").setAttribute("color", "#246F3C");
 
         if (!machineDetails.orders) {
             document.getElementById("item").setAttribute("value", "sem item");
@@ -222,6 +221,9 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
         }
         if (stopDetails.color === "CBDEE8") {
             document.getElementById("grandbox").setAttribute("color", "#adb3b7")
+        }
+        if (stopDetails.color === "FFCC47") {
+            document.getElementById("grandbox").setAttribute("color", "#f5c207")
         }
         updateProductionStatus(machineDetails);
     } 
@@ -274,31 +276,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // BARRA DE PRODUÇÃO ............................................................................................................
 
-// função que calcula e atualiza o percentual de produção no elemento html e retorna o valor
+// Função que calcula e atualiza o percentual de produção no elemento HTML e retorna o valor
 function updateStatusPercentage() {
     const getValue = (id) => parseInt(document.getElementById(id)?.getAttribute("value") || 0);
     const quantity = getValue("quantity");
     const quantityprod = getValue("quantityprod") || 1; // Evitar divisão por zero
     const refuge = getValue("refuge");
-    // calculo do percentual limitando entre 0 a 100
-    const percentage = refuge ? ((quantity - refuge) / quantityprod) * 100 : (quantity / quantityprod) * 100;
+
+    const percentage = refuge ? ((quantityprod - refuge) / quantity) * 100 : (quantityprod / quantity) * 100;    
     const finalPercentage = Math.max(0, Math.min(100, percentage.toFixed(2))); // Limita entre 0 e 100
-    // atualiza o elemento html
+
     const element = document.getElementById("statusPercentage");
     element?.setAttribute("value", `${finalPercentage}%`);
     return finalPercentage;
 }
 
-// função que ajusta o tamanho da barra de produção com base no percentual
+// Função que ajusta o tamanho da barra de produção com base no percentual
 function updateProductionBar(value) {
     const barFill = document.getElementById("production-bar");
     if (barFill) {
-        const fillScale = value / 100; // Percentual convertido para escala
-        barFill.setAttribute("scale", `${fillScale * 1.3} 0.1 0.1`); 
+        const fillScale = value / 100; 
+        const startPos = fillScale * 1.3;
+        const newPos = -0.65 + (startPos / 2);
+        
+        barFill.setAttribute("scale", `${startPos} 0.1 0.1`);
+        barFill.setAttribute("position", `${newPos} -0.1 0`);
     }
 }
 
-// função principal para sincronizar statusPercentage e a barra de produção
+// Função principal para sincronizar statusPercentage e a barra de produção
 function updateProductionStatus() {
     updateProductionBar(updateStatusPercentage()); 
 }
+setInterval(updateProductionStatus, 10000);  // Atualiza a cada 10 segundo
+
+
