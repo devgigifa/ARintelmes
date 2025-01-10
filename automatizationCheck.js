@@ -62,10 +62,17 @@ async function checkMachineStatus(macAddress, name) {
             // Status
             const status = data?.data[0]?.status;
             let statusMessage = '';
+            let stopName = '';  // Variável para armazenar o nome da parada
             if (status === 'PRODUCTION') {
                 statusMessage = 'Em Produção';
             } else if (status === 'STOP') {
                 statusMessage = 'Parado';
+                
+                // Obtendo o nome da parada, se disponível
+                const stopDetails = data?.data?.[0]?.stopDetails?.[0];
+                if (stopDetails) {
+                    stopName = stopDetails.name;
+                }
             } else {
                 statusMessage = 'Status desconhecido';
             }
@@ -82,6 +89,12 @@ async function checkMachineStatus(macAddress, name) {
 
             // Exibindo as informações no console
             console.log(`${name} (${macAddress}) - Status: ${statusMessage} | ${ordersMessage}`);
+            
+            // Log adicional quando a máquina está parada
+            if (status === 'STOP' && stopName) {
+                console.log(`A máquina ${name} está parada. Motivo da parada: ${stopName}`);
+            }
+
         } else {
             console.log(`${macAddress} - Erro ao verificar status. Código: ${intelmountAPIResponse.status}`);
         }
