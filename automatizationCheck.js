@@ -84,7 +84,7 @@ async function checkMachineStatus(macAddress, name) {
                 ordersMessage = 'Sem ordens ativas';
             } else {
                 const production = orders[0]?.production;
-                ordersMessage = production ? `Produção ativa: ${production}` : 'Sem produção ativa';
+                ordersMessage = production ? `Produção ativa` : 'Sem produção ativa';
             }
 
             // Exibindo as informações no console
@@ -92,7 +92,7 @@ async function checkMachineStatus(macAddress, name) {
             
             // Log adicional quando a máquina está parada
             if (status === 'STOP' && stopName) {
-                console.log(`A máquina ${name} está parada. Motivo da parada: ${stopName}`);
+                console.log(`Motivo da parada: ${stopName}`);
             }
 
         } else {
@@ -106,7 +106,7 @@ async function checkMachineStatus(macAddress, name) {
 // Loop para verificar o status de todas as máquinas
 async function checkAllMachines() {
     for (let machine of macAddresses) {
-        console.log(`Verificando status de ${machine.name} (${machine.mac})...`);
+        // console.log(`Verificando status de ${machine.name} (${machine.mac})...`);
         await checkMachineStatus(machine.mac, machine.name);
     }
 }

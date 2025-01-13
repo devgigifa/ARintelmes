@@ -10,10 +10,8 @@ async function initAR() {
 			const intelmountAPIResponse = await fetch(`https://intelmount.apps.intelbras.com.br/v1/resources/mount?mac=${qrCodeResponse}`);
 			if (intelmountAPIResponse.ok) {
 				const data = await intelmountAPIResponse.json();
-
 				const status = data?.data[0]?.status;
 				const stopDetails = data?.data?.[0]?.stopDetails?.[0] ? { color: data.data[0].stopDetails[0].color, name: data.data[0].stopDetails[0].name } : null;
-				
 				const machineDetails = {
 					cycletime: data?.data[0]?.orders?.currents[0]?.item?.factor,
 					operationcode: data?.data[0]?.orders?.currents[0]?.operationId,
@@ -37,10 +35,8 @@ async function initAR() {
 						element.setAttribute("value", machineDetails[component]);
 					}
 				}
-
 				// Atualiza o status da máquina
 				updateMachineStatus(status, stopDetails, machineDetails);
-				
 				// Retorna o rescode
 				return machineDetails.rescode;
 			}
@@ -54,23 +50,18 @@ async function initAR() {
 async function initTime(resCode) {
 	if (resCode) {
 		try {
-			// Chamada para o tempo produtivo
 			const productiveDateAps = await fetch(
 				`https://intelcalc.apps.intelbras.com.br/v1/resources/${resCode}/aps/calendar/productive?date=${new Date().toISOString()}`
 			);
-
 			if (productiveDateAps.ok) {
 				const data = await productiveDateAps.json();
-
 				const timeDetails = {
 					dateStart: data?.data?.dateStart,
 					dateEnd: data?.data?.dateEnd,
 				};
-
 				const startDate = new Date(timeDetails.dateStart);
 				const endDate = timeDetails.dateEnd ? new Date(timeDetails.dateEnd) : new Date();
 				const operationTime = (endDate - startDate) / 60000; // Em minutos
-
 				const hours = Math.floor(operationTime / 60);
 				const minutes = Math.floor(operationTime % 60);
 				const duration = hours > 0 ? `${hours} h` : `${minutes} min`;
@@ -83,7 +74,6 @@ async function initTime(resCode) {
 				} else {
 					console.error("Elemento com id 'hours' não encontrado.");
 				}
-
 				return timeDetails;  // Retorna as datas para uso posterior
 			} else {
 				console.error("Erro ao buscar dados da API:", productiveDateAps.status);
@@ -96,7 +86,6 @@ async function initTime(resCode) {
 
 // GAUGES ............................................................................................................................................................................................
 async function initGauges(resCode, dateStart, dateEnd) {
-
 	const components = ["performance", "quality", "available", "oee"];
 
 	try {
@@ -144,10 +133,18 @@ function updateGauge(value, textId, ringId) {
 	if (textEntity && ringEntity) {
 		// atualiza o texto exibido no gauge
 		textEntity.setAttribute('value', `${textId.split('-')[1]}: ${Math.round(value)}%`);
-		// calcula a cor do anel
-		const greenValue = Math.floor((value / 100) * 255);
-		const redValue = 255 - greenValue;
-		const color = `rgb(${redValue}, ${greenValue}, 0)`;
+		// verifica se o valor é maior que 100 e aplica a cor verde escuro
+		let color;
+		if (value > 100) {
+			// Para valores maiores que 100, a cor é verde escuro
+			color = 'rgb(0, 128, 0)';  // verde escuro
+		} else {
+			// calcula a cor do anel
+			const greenValue = Math.floor((value / 100) * 255);
+			const redValue = 255 - greenValue;
+			color = `rgb(${redValue}, ${greenValue}, 0)`;
+		}
+		// define a cor do anel
 		ringEntity.setAttribute('color', color);
 		// atualiza o anel
 		const length = (value / 100) * 360;
@@ -177,7 +174,6 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 
 		document.getElementById("grandbox").setAttribute("color", "#00a335");
 		document.getElementById("status").setAttribute("value", "PRODUCAO");
-		document.getElementById("production-bar").setAttribute("color", "#246F3C");
 
 		if (!machineDetails.orders) {
 			document.getElementById("item").setAttribute("value", "sem item");
@@ -200,7 +196,6 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 
 		document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);        
 		document.getElementById("status").setAttribute("value", "PARADO");
-		document.getElementById("production-bar").setAttribute("color", "#50788a");
 		document.getElementById("item").setAttribute("value", stopDetails.name);
 
 		if (!machineDetails.orders) {
@@ -210,10 +205,8 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 			document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);
 			document.getElementById("status").setAttribute("value", "PARADO");
 			document.getElementById("tc").setAttribute("value", stopDetails.name);
-			document.getElementById("production-bar").setAttribute("color", "#8f9ca4");
 
 			const elementsToHide = [ "cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "perf", "goodquantity", "calcProdNum", "tc", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop", "statusPercentage", "lineI", "lineII"  ];
-	
 			for (const id of elementsToHide) {
 				const element = document.getElementById(id);
 				if (element) element.setAttribute("visible", "false");
@@ -233,12 +226,9 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 		console.log("Entrou em inativo");
 
 		const elementsToHide = [  "cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "perf", "goodquantity", "calcProdNum", "tc", "op", "qtd", "qtdboa", "qtdprod", "ref"  ];
-
 		document.getElementById("grandbox").setAttribute("color", "#adb3b7");
 		document.getElementById("status").setAttribute("value", "INATIVO");
 		document.getElementById("item").setAttribute("value", "FORA DE TURNO: MAQUINA DESLIGADA PLANEJADA");
-		document.getElementById("production-bar").setAttribute("color", "#8f9ca4");
-
 		for (const id of elementsToHide) {
 			const element = document.getElementById(id);
 			if (element) element.setAttribute("visible", "false");
@@ -247,21 +237,19 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 	}
 
 	// INICIO DE OP - TESTAR
-	// if(statusPercentage >= 0 && statusPercentage <= 5){
-	//     document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);
-	//     document.getElementById("status").setAttribute("value", "INICIO DE OP"); //pode ser "INICIO DE OP" OU "TROCA DE OP"
-	//     document.getElementById("production-bar").setAttribute("color", "#50788a");
-	//     // document.getElementById("item").setAttribute("value", stopDetails.name);
-	//     updateProductionStatus(machineDetails);
-	// }
+	if(statusPercentage >= 0 && statusPercentage <= 5){
+	    document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);
+	    document.getElementById("status").setAttribute("value", "INICIO DE OP"); //pode ser "INICIO DE OP" OU "TROCA DE OP"
+	    // document.getElementById("item").setAttribute("value", stopDetails.name);
+	    updateProductionStatus(machineDetails);
+	}
 
 	// TROCA DE OP - TESTAR
-	// if(statusPercentage > 95){
-	//     document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);        
-	//     document.getElementById("status").setAttribute("value", "TROCA DE OP"); //pode ser "INICIO DE OP" OU "TROCA DE OP"
-	//     document.getElementById("production-bar").setAttribute("color", "#50788a");
-	//     updateProductionStatus(machineDetails);
-	// }
+	if(statusPercentage > 95){
+	    document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);        
+	    document.getElementById("status").setAttribute("value", "TROCA DE OP"); //pode ser "INICIO DE OP" OU "TROCA DE OP"
+	    updateProductionStatus(machineDetails);
+	}
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -282,10 +270,8 @@ function updateStatusPercentage() {
 	const quantity = getValue("quantity");
 	const quantityprod = getValue("quantityprod") || 1; // Evitar divisão por zero
 	const refuge = getValue("refuge");
-
 	const percentage = refuge ? ((quantityprod - refuge) / quantity) * 100 : (quantityprod / quantity) * 100;    
 	const finalPercentage = Math.max(0, Math.min(100, percentage.toFixed(2))); // Limita entre 0 e 100
-
 	const element = document.getElementById("statusPercentage");
 	element?.setAttribute("value", `${finalPercentage}%`);
 	return finalPercentage;
@@ -298,7 +284,6 @@ function updateProductionBar(value) {
 		const fillScale = value / 100; 
 		const startPos = fillScale * 1.3;
 		const newPos = -0.65 + (startPos / 2);
-		
 		barFill.setAttribute("scale", `${startPos} 0.1 0.1`);
 		barFill.setAttribute("position", `${newPos} -0.1 0`);
 	}

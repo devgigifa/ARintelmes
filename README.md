@@ -13,9 +13,11 @@ Projeto em realidade aumentada para exibir informações de máquina de forma r�
 - [x] Conectar a aplicação com a API.
 - [x] Criar endpoints.
 - [x] Transformar as informações da máquina em realidade aumentada.
-- [ ] Testes no Glitch.
+- [x] Testes no Glitch.
 - [x] Endpoint dos gauges.
 - [x] Endpoint das horas de funcionamento.
+- [ ] Verificar retorno da api das horas de funcionamento.
+- [x] Cor da barra de produção.
 - [ ] Criar link para o AR de cada máquina.
 - [ ] Gerar QR Code.
 
@@ -27,6 +29,10 @@ Projeto em realidade aumentada para exibir informações de máquina de forma r�
 
 ## Pastas
 
+- index.html → atual version
+- script.js → atual version
+- automatizationCheck → verificação do status das máquinas para teste
+
 ### path
 É o caminho desenvolvido até a versão final.
 - main9 → aplicação sem câmera pegando direto da API
@@ -36,10 +42,10 @@ Projeto em realidade aumentada para exibir informações de máquina de forma r�
 - main5 → atual código, aplicação com câmera fazendo uma requisição CORS temporária, com estrutura quase pronta
 - main4 → aplicação com câmera fazendo requisições, com endpoints e formatação dos elementos ajustada
 - main3 → aplicação com câmera fazendo requisições, com endpoints e formatação dos elementos ajustada, e casos específicos da máquina, código aprimorado
+- main3 → aplicação com câmera fazendo requisições, com endpoints e formatação dos elementos ajustada, e casos específicos da máquina, mudança de biblioteca para melhor visualização, cores faltantes adicionadas.
 
 ### testes
 - checkpoint → última versão com tudo funcionando
-- totest → versão para teste
 - workarea → editando o código, arquivo para o desenvolvimento
 
 
