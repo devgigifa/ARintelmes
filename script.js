@@ -3,7 +3,7 @@ async function initAR() {
 	const scene = document.querySelector("#a-scene");
 	scene.style.display = "block"; 
 	const components = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "nextop", "rescode", "itemtool", "item", "status"];
-	const qrCodeResponse = 'D0:EF:76:44:9F:87'; // Endereço de MAC
+	const qrCodeResponse = 'D0:EF:76:45:53:EB'; // Endereço de MAC
 
 	if (qrCodeResponse) {
 		try {
@@ -37,7 +37,7 @@ async function initAR() {
 				}
 				// Atualiza o status da máquina
 				updateMachineStatus(status, stopDetails, machineDetails);
-				// Retorna o rescode
+
 				return machineDetails.rescode;
 			}
 		} catch (error) {
@@ -46,50 +46,66 @@ async function initAR() {
 	}
 }
 
-// TIME .............................................................................................................................................
+// TIME ......................................................................
 async function initTime(resCode) {
-	if (resCode) {
-		try {
-			const productiveDateAps = await fetch(
-				`https://intelcalc.apps.intelbras.com.br/v1/resources/${resCode}/aps/calendar/productive?date=${new Date().toISOString()}`
-			);
-			if (productiveDateAps.ok) {
-				const data = await productiveDateAps.json();
-				const timeDetails = {
-					dateStart: data?.data?.dateStart,
-					dateEnd: data?.data?.dateEnd,
-				};
-				const startDate = new Date(timeDetails.dateStart);
-				const endDate = timeDetails.dateEnd ? new Date(timeDetails.dateEnd) : new Date();
-				const operationTime = (endDate - startDate) / 60000; // Em minutos
-				const hours = Math.floor(operationTime / 60);
-				const minutes = Math.floor(operationTime % 60);
-				const duration = hours > 0 ? `${hours} h` : `${minutes} min`;
+	if (!resCode) return;
 
-				console.log(`A máquina funcionou por ${duration}.`);
-
-				const hoursElement = document.getElementById("hours");
-				if (hoursElement) {
-					hoursElement.setAttribute("value", duration);
-				} else {
-					console.error("Elemento com id 'hours' não encontrado.");
-				}
-				return timeDetails;  // Retorna as datas para uso posterior
-			} else {
-				console.error("Erro ao buscar dados da API:", productiveDateAps.status);
-			}
-		} catch (error) {
-			console.error("Erro ao processar os dados:", error);
+	try {
+		const productiveDateAps = await fetch(
+			`https://intelcalc.apps.intelbras.com.br/v1/resources/${resCode}/aps/calendar/productive?date=${new Date().toISOString()}`
+		);
+		if (!productiveDateAps.ok) {
+			console.error("Erro ao buscar dados da API:", productiveDateAps.status);
+			return;
 		}
+		const { dateStart } = (await productiveDateAps.json()).data || {};
+		if (!dateStart) {
+			console.error("Data de início não encontrada.");
+			return;
+		}
+		// ajustar datas para o horário local
+		const toLocalTime = (date) => new Date(new Date(date).getTime() - new Date(date).getTimezoneOffset() * 60000);
+		const localStartDate = toLocalTime(dateStart); // Ajusta o horário de início
+		const localEndDate = toLocalTime(new Date());  // Ajusta o horário atual
+
+		// log de data
+		console.log("Start Date (API, ajustado para o horário local):", localStartDate.toISOString());
+		console.log("End Date (Hora atual ajustada para o horário local):", localEndDate.toISOString());
+
+		const operationTime = (localEndDate - localStartDate) / 60000;
+		const hours = Math.floor(operationTime / 60);
+		const minutes = Math.floor(operationTime % 60);
+		const duration = hours > 0 ? `${hours} h` : `${minutes} min`;
+
+		// log tempo de operação
+		console.log(`A máquina funcionou por ${duration}.`);
+
+		// atualiza valor do elemento
+		const hoursElement = document.getElementById("hours");
+		hoursElement?.setAttribute("value", duration);
+
+		return { dateStart: localStartDate.toISOString(), dateEnd: localEndDate.toISOString() };
+
+	} catch (error) {
+		console.error("Erro ao processar os dados:", error);
 	}
 }
 
-// GAUGES ............................................................................................................................................................................................
+// GAUGES ................................................................
+
 async function initGauges(resCode, dateStart, dateEnd) {
 	const components = ["performance", "quality", "available", "oee"];
-
 	try {
-		const intelcalcAPIResponse = await fetch(`https://intelcalc.apps.intelbras.com.br/v1/oee/time?dateEnd=${dateEnd}&dateStart=${dateStart}&resCode=${resCode}&onlyPerf=false`);
+		const startDateISO = new Date(dateStart).toISOString();
+		const endDateISO = new Date(dateEnd).toISOString();
+
+		// Log para visualizar as horas de início e fim
+		console.log("Start Date (ISO):", startDateISO);
+		console.log("End Date (ISO):", endDateISO);
+
+		const intelcalcAPIResponse = await fetch(
+			`https://intelcalc.apps.intelbras.com.br/v1/oee/time?dateEnd=${endDateISO}&dateStart=${startDateISO}&resCode=${resCode}&onlyPerf=false`
+		);
 		if (intelcalcAPIResponse.ok) {
 			const data = await intelcalcAPIResponse.json();
 			const gaugeDetails = {
@@ -124,6 +140,7 @@ async function initGauges(resCode, dateStart, dateEnd) {
 		console.error("Falha ao buscar dados:", error);
 	}
 }
+
 
 // Atualiza os gauges
 function updateGauge(value, textId, ringId) {
@@ -164,7 +181,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 	}
 });
 
-// STATUS MACHINE ............................................................................................................................
+// STATUS MACHINE ...............................................................................
 
 async function updateMachineStatus(status, stopDetails, machineDetails) {
 
@@ -212,29 +229,25 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 				if (element) element.setAttribute("visible", "false");
 			}
 		}
-		if (stopDetails.color === "CBDEE8") {
-			document.getElementById("grandbox").setAttribute("color", "#adb3b7")
-		}
-		if (stopDetails.color === "FFCC47") {
-			document.getElementById("grandbox").setAttribute("color", "#f5c207")
-		}
+		if (stopDetails.color === "CBDEE8") { document.getElementById("grandbox").setAttribute("color", "#adb3b7") }
+		if (stopDetails.color === "FFCC47") { document.getElementById("grandbox").setAttribute("color", "#eead2d") }
 		updateProductionStatus(machineDetails);
 	} 
 
 	// INATIVO
-	if (status === "INACTIVE") {
-		console.log("Entrou em inativo");
+	// if (status === "INACTIVE") {
+	// 	console.log("Entrou em inativo");
 
-		const elementsToHide = [  "cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "perf", "goodquantity", "calcProdNum", "tc", "op", "qtd", "qtdboa", "qtdprod", "ref"  ];
-		document.getElementById("grandbox").setAttribute("color", "#adb3b7");
-		document.getElementById("status").setAttribute("value", "INATIVO");
-		document.getElementById("item").setAttribute("value", "FORA DE TURNO: MAQUINA DESLIGADA PLANEJADA");
-		for (const id of elementsToHide) {
-			const element = document.getElementById(id);
-			if (element) element.setAttribute("visible", "false");
-		}
-		updateProductionStatus(machineDetails);
-	}
+	// 	const elementsToHide = [  "cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "perf", "goodquantity", "calcProdNum", "tc", "op", "qtd", "qtdboa", "qtdprod", "ref"  ];
+	// 	document.getElementById("grandbox").setAttribute("color", "#adb3b7");
+	// 	document.getElementById("status").setAttribute("value", "INATIVO");
+	// 	document.getElementById("item").setAttribute("value", "FORA DE TURNO: MAQUINA DESLIGADA PLANEJADA");
+	// 	for (const id of elementsToHide) {
+	// 		const element = document.getElementById(id);
+	// 		if (element) element.setAttribute("visible", "false");
+	// 	}
+	// 	updateProductionStatus(machineDetails);
+	// }
 
 	// INICIO DE OP - TESTAR
 	if(statusPercentage >= 0 && statusPercentage <= 5){
@@ -262,7 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-// BARRA DE PRODUÇÃO ............................................................................................................
+// BARRA DE PRODUÇÃO .........................................................
 
 // Função que calcula e atualiza o percentual de produção no elemento HTML e retorna o valor
 function updateStatusPercentage() {
@@ -294,5 +307,3 @@ function updateProductionStatus() {
 	updateProductionBar(updateStatusPercentage()); 
 }
 setInterval(updateProductionStatus, 10000);  // Atualiza a cada 10 segundo
-
-

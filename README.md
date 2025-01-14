@@ -16,7 +16,7 @@ Projeto em realidade aumentada para exibir informações de máquina de forma r�
 - [x] Testes no Glitch.
 - [x] Endpoint dos gauges.
 - [x] Endpoint das horas de funcionamento.
-- [ ] Verificar retorno da api das horas de funcionamento.
+- [x] Verificar retorno da api das horas de funcionamento.
 - [x] Cor da barra de produção.
 - [ ] Criar link para o AR de cada máquina.
 - [ ] Gerar QR Code.
@@ -47,5 +47,3 @@ Projeto em realidade aumentada para exibir informações de máquina de forma r�
 ### testes
 - checkpoint → última versão com tudo funcionando
 - workarea → editando o código, arquivo para o desenvolvimento
-
-
