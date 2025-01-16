@@ -193,12 +193,8 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 		document.getElementById("status").setAttribute("value", "PRODUCAO");
 
 		if (!machineDetails.orders) {
-			document.getElementById("item").setAttribute("value", "sem item");
-			const elementsToHide = [
-				"cycletime", "operationcode", "quantity", "quantityprod",
-				"scrapquantity", "perf", "goodquantity", "calcProdNum", 
-				"tc", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop", "statusPercentage"
-			];
+			document.getElementById("tc").setAttribute("value", "sem item");
+			const elementsToHide = [ "cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "perf", "goodquantity", "calcProdNum", "item", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop", "statusPercentage", "lineI", "lineII" ];
 			for (const id of elementsToHide) {
 				const element = document.getElementById(id);
 				if (element) element.setAttribute("visible", "false");
@@ -213,7 +209,7 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 
 		document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);        
 		document.getElementById("status").setAttribute("value", "PARADO");
-		document.getElementById("item").setAttribute("value", stopDetails.name);
+		document.getElementById("nextop").setAttribute("value", stopDetails.name);
 
 		if (!machineDetails.orders) {
 			// Parado sem ordem
@@ -223,7 +219,7 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 			document.getElementById("status").setAttribute("value", "PARADO");
 			document.getElementById("tc").setAttribute("value", stopDetails.name);
 
-			const elementsToHide = [ "cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "perf", "goodquantity", "calcProdNum", "tc", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop", "statusPercentage", "lineI", "lineII"  ];
+			const elementsToHide = [ "cycletime", "operationcode", "quantity", "quantityprod", "item", "scrapquantity", "perf", "goodquantity", "calcProdNum", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop", "statusPercentage", "lineI", "lineII"  ];
 			for (const id of elementsToHide) {
 				const element = document.getElementById(id);
 				if (element) element.setAttribute("visible", "false");
@@ -260,7 +256,7 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 	// TROCA DE OP - TESTAR
 	if(statusPercentage > 95){
 	    document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);        
-	    document.getElementById("status").setAttribute("value", "TROCA DE OP"); //pode ser "INICIO DE OP" OU "TROCA DE OP"
+	    document.getElementById("status").setAttribute("value", "TROCA DE OP");
 	    updateProductionStatus(machineDetails);
 	}
 }
