@@ -3,7 +3,7 @@ async function initAR() {
 	const scene = document.querySelector("#a-scene");
 	scene.style.display = "block"; 
 	const components = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "nextop", "rescode", "itemtool", "item", "status"];
-	const qrCodeResponse = 'D0:EF:76:45:53:EB'; // Endereço de MAC
+	const qrCodeResponse = 'D0:EF:76:44:CC:DF'; // Endereço de MAC
 
 	if (qrCodeResponse) {
 		try {
@@ -188,17 +188,14 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 	// PRODUÇÃO
 	if (status === "PRODUCTION") {
 		console.log("Entrou em produção");
-
+		
+		document.getElementById("entity").setAttribute("visible", "true");        
 		document.getElementById("grandbox").setAttribute("color", "#00a335");
 		document.getElementById("status").setAttribute("value", "PRODUCAO");
 
 		if (!machineDetails.orders) {
-			document.getElementById("item").setAttribute("value", "sem item");
-			const elementsToHide = [
-				"cycletime", "operationcode", "quantity", "quantityprod",
-				"scrapquantity", "perf", "goodquantity", "calcProdNum", 
-				"tc", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop", "statusPercentage"
-			];
+			document.getElementById("tc").setAttribute("value", "sem item");
+			const elementsToHide = [ "cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "perf", "goodquantity", "calcProdNum", "item", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop", "statusPercentage", "lineI", "lineII" ];
 			for (const id of elementsToHide) {
 				const element = document.getElementById(id);
 				if (element) element.setAttribute("visible", "false");
@@ -211,19 +208,22 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 	if (status === "STOP" ) {
 		console.log("Entrou em parada");
 
+		document.getElementById("entity").setAttribute("visible", "true");        
+
 		document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);        
 		document.getElementById("status").setAttribute("value", "PARADO");
-		document.getElementById("item").setAttribute("value", stopDetails.name);
+		document.getElementById("nextop").setAttribute("value", stopDetails.name);
 
 		if (!machineDetails.orders) {
 			// Parado sem ordem
 			console.log("Entrou em parado sem ordem");
 
+			document.getElementById("entity").setAttribute("visible", "true");        
 			document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);
 			document.getElementById("status").setAttribute("value", "PARADO");
 			document.getElementById("tc").setAttribute("value", stopDetails.name);
 
-			const elementsToHide = [ "cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "perf", "goodquantity", "calcProdNum", "tc", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop", "statusPercentage", "lineI", "lineII"  ];
+			const elementsToHide = [ "cycletime", "operationcode", "quantity", "quantityprod", "item", "scrapquantity", "perf", "goodquantity", "calcProdNum", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop", "statusPercentage", "lineI", "lineII"  ];
 			for (const id of elementsToHide) {
 				const element = document.getElementById(id);
 				if (element) element.setAttribute("visible", "false");
@@ -251,6 +251,7 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 
 	// INICIO DE OP - TESTAR
 	if(statusPercentage >= 0 && statusPercentage <= 5){
+		document.getElementById("entity").setAttribute("visible", "true");        
 	    document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);
 	    document.getElementById("status").setAttribute("value", "INICIO DE OP"); //pode ser "INICIO DE OP" OU "TROCA DE OP"
 	    // document.getElementById("item").setAttribute("value", stopDetails.name);
@@ -259,8 +260,9 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 
 	// TROCA DE OP - TESTAR
 	if(statusPercentage > 95){
+		document.getElementById("entity").setAttribute("visible", "true");        
 	    document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);        
-	    document.getElementById("status").setAttribute("value", "TROCA DE OP"); //pode ser "INICIO DE OP" OU "TROCA DE OP"
+	    document.getElementById("status").setAttribute("value", "TROCA DE OP");
 	    updateProductionStatus(machineDetails);
 	}
 }

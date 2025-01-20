@@ -20,7 +20,6 @@
             height: 100%;
         }
     </style>
-    
 </head>
 
 <body>
@@ -32,7 +31,10 @@
     >
         <a-entity camera position="0 1 0" look-controls="enabled: false"></a-entity>
 
-        <a-box id="grandbox" color="#000000"
+
+        <a-entity id="entity" visible="false">
+
+        <a-box id="grandbox" material="color: black; opacity: 1;"
             position="0 1.25 -3"
             rotation="0 0 0"
             scale="2 1 0.5"
@@ -171,6 +173,8 @@
             position="-0.8 0.84 -2.4" 
         ></a-text> 
 
+    </a-entity>
+
     <!-- GAUGES -->
     <a-entity id="gauges-group" frustumCulled="false">
         <a-entity id="gauge-OEE" 
@@ -178,7 +182,7 @@
             scale="0.35 0.35 0.35"
         >
         <a-ring id="ring-oee" color="blue" radius-inner="0.35" radius-outer="0.45" theta-start="0" theta-length="0"></a-ring>
-        <a-text id="text-oee" value="OEE: " align="center" color="white" position="0 0.6 0" ></a-text>
+        <a-text id="text-oee" value="" align="center" color="white" position="0 0.6 0" ></a-text>
         </a-entity>
 
         <a-entity id="gauge-Disponibilidade" 
@@ -186,7 +190,7 @@
             scale="0.35 0.35 0.35"  
         >
         <a-ring id="ring-available" color="orange" radius-inner="0.35" radius-outer="0.45" theta-start="0" theta-length="0" ></a-ring>
-        <a-text id="text-available" value="Disp: " position="0 0.6 0" align="center" color="white"></a-text>
+        <a-text id="text-available" value="" position="0 0.6 0" align="center" color="white"></a-text>
         </a-entity>
 
         <a-entity id="gauge-Performance" 
@@ -194,7 +198,7 @@
             scale="0.35 0.35 0.35"  
         >
         <a-ring id="ring-performance" color="green" radius-inner="0.35" radius-outer="0.45" theta-start="0" theta-length="0" ></a-ring>
-        <a-text id="text-performance" value="Perf: " position="0 0.6 0" align="center" color="white" ></a-text>
+        <a-text id="text-performance" value="" position="0 0.6 0" align="center" color="white" ></a-text>
         </a-entity>
 
         <a-entity id="gauge-Qualidade" 
@@ -202,7 +206,7 @@
             scale="0.35 0.35 0.35"  
         >
         <a-ring id="ring-quality" color="yellow" radius-inner="0.35" radius-outer="0.45" theta-start="0" theta-length="0"></a-ring>
-        <a-text id="text-quality" value="Qual: " position="0 0.6 0" align="center" color="white"></a-text>
+        <a-text id="text-quality" value="" position="0 0.6 0" align="center" color="white"></a-text>
         </a-entity>
     </a-entity>
 </a-scene>

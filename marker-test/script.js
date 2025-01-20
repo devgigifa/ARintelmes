@@ -1,13 +1,20 @@
-// Função para inicializar a AR e retornar o rescode
+// script.js
+
+document.addEventListener('DOMContentLoaded', () => {
+    initAR();
+    initGauges();
+    productionBar();
+});
+
 async function initAR() {
 	const scene = document.querySelector("#a-scene");
 	scene.style.display = "block"; 
 	const components = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "nextop", "rescode", "itemtool", "item", "status"];
-	const qrCodeResponse = 'D0:EF:76:44:CC:DF'; // Endereço de MAC
+	// const macAdress = 'D0:EF:76:46:79:9B'; // Endereço de MAC
 
-	if (qrCodeResponse) {
+	if (macAdress) {
 		try {
-			const intelmountAPIResponse = await fetch(`https://intelmount.apps.intelbras.com.br/v1/resources/mount?mac=${qrCodeResponse}`);
+			const intelmountAPIResponse = await fetch(`https://intelmount.apps.intelbras.com.br/v1/resources/mount?mac=${macAdress}`);
 			if (intelmountAPIResponse.ok) {
 				const data = await intelmountAPIResponse.json();
 				const status = data?.data[0]?.status;
@@ -43,51 +50,6 @@ async function initAR() {
 		} catch (error) {
 			console.error("Failed to fetch data:", error);
 		}
-	}
-}
-
-// TIME ......................................................................
-async function initTime(resCode) {
-	if (!resCode) return;
-
-	try {
-		const productiveDateAps = await fetch(
-			`https://intelcalc.apps.intelbras.com.br/v1/resources/${resCode}/aps/calendar/productive?date=${new Date().toISOString()}`
-		);
-		if (!productiveDateAps.ok) {
-			console.error("Erro ao buscar dados da API:", productiveDateAps.status);
-			return;
-		}
-		const { dateStart } = (await productiveDateAps.json()).data || {};
-		if (!dateStart) {
-			console.error("Data de início não encontrada.");
-			return;
-		}
-		// ajustar datas para o horário local
-		const toLocalTime = (date) => new Date(new Date(date).getTime() - new Date(date).getTimezoneOffset() * 60000);
-		const localStartDate = toLocalTime(dateStart); // Ajusta o horário de início
-		const localEndDate = toLocalTime(new Date());  // Ajusta o horário atual
-
-		// log de data
-		console.log("Start Date (API, ajustado para o horário local):", localStartDate.toISOString());
-		console.log("End Date (Hora atual ajustada para o horário local):", localEndDate.toISOString());
-
-		const operationTime = (localEndDate - localStartDate) / 60000;
-		const hours = Math.floor(operationTime / 60);
-		const minutes = Math.floor(operationTime % 60);
-		const duration = hours > 0 ? `${hours} h` : `${minutes} min`;
-
-		// log tempo de operação
-		console.log(`A máquina funcionou por ${duration}.`);
-
-		// atualiza valor do elemento
-		const hoursElement = document.getElementById("hours");
-		hoursElement?.setAttribute("value", duration);
-
-		return { dateStart: localStartDate.toISOString(), dateEnd: localEndDate.toISOString() };
-
-	} catch (error) {
-		console.error("Erro ao processar os dados:", error);
 	}
 }
 
@@ -141,7 +103,6 @@ async function initGauges(resCode, dateStart, dateEnd) {
 	}
 }
 
-
 // Atualiza os gauges
 function updateGauge(value, textId, ringId) {
 	const textEntity = document.getElementById(textId);
@@ -181,6 +142,53 @@ document.addEventListener('DOMContentLoaded', async () => {
 	}
 });
 
+// TIME ......................................................................
+async function initTime(resCode) {
+	if (!resCode) return;
+
+	try {
+		const productiveDateAps = await fetch(
+			`https://intelcalc.apps.intelbras.com.br/v1/resources/${resCode}/aps/calendar/productive?date=${new Date().toISOString()}`
+		);
+		if (!productiveDateAps.ok) {
+			console.error("Erro ao buscar dados da API:", productiveDateAps.status);
+			return;
+		}
+		const { dateStart } = (await productiveDateAps.json()).data || {};
+		if (!dateStart) {
+			console.error("Data de início não encontrada.");
+			return;
+		}
+		// ajustar datas para o horário local
+		const toLocalTime = (date) => new Date(new Date(date).getTime() - new Date(date).getTimezoneOffset() * 60000);
+		const localStartDate = toLocalTime(dateStart); // Ajusta o horário de início
+		const localEndDate = toLocalTime(new Date());  // Ajusta o horário atual
+
+		// log de data
+		console.log("Start Date (API, ajustado para o horário local):", localStartDate.toISOString());
+		console.log("End Date (Hora atual ajustada para o horário local):", localEndDate.toISOString());
+
+		const operationTime = (localEndDate - localStartDate) / 60000;
+		const hours = Math.floor(operationTime / 60);
+		const minutes = Math.floor(operationTime % 60);
+		const duration = hours > 0 ? `${hours} h` : `${minutes} min`;
+
+		// log tempo de operação
+		console.log(`A máquina funcionou por ${duration}.`);
+
+		// atualiza valor do elemento
+		const hoursElement = document.getElementById("hours");
+		hoursElement?.setAttribute("value", duration);
+
+		return { dateStart: localStartDate.toISOString(), dateEnd: localEndDate.toISOString() };
+
+	} catch (error) {
+		console.error("Erro ao processar os dados:", error);
+	}
+}
+
+
+
 // STATUS MACHINE ...............................................................................
 
 async function updateMachineStatus(status, stopDetails, machineDetails) {
@@ -188,9 +196,9 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 	// PRODUÇÃO
 	if (status === "PRODUCTION") {
 		console.log("Entrou em produção");
-		
+
 		document.getElementById("entity").setAttribute("visible", "true");        
-		document.getElementById("grandbox").setAttribute("color", "#00a335");
+		document.getElementById("grandbox").setAttribute('material', "color", "#00a335");
 		document.getElementById("status").setAttribute("value", "PRODUCAO");
 
 		if (!machineDetails.orders) {
@@ -209,7 +217,6 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 		console.log("Entrou em parada");
 
 		document.getElementById("entity").setAttribute("visible", "true");        
-
 		document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);        
 		document.getElementById("status").setAttribute("value", "PARADO");
 		document.getElementById("nextop").setAttribute("value", stopDetails.name);
@@ -222,6 +229,7 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 			document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);
 			document.getElementById("status").setAttribute("value", "PARADO");
 			document.getElementById("tc").setAttribute("value", stopDetails.name);
+
 
 			const elementsToHide = [ "cycletime", "operationcode", "quantity", "quantityprod", "item", "scrapquantity", "perf", "goodquantity", "calcProdNum", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop", "statusPercentage", "lineI", "lineII"  ];
 			for (const id of elementsToHide) {
@@ -251,7 +259,6 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 
 	// INICIO DE OP - TESTAR
 	if(statusPercentage >= 0 && statusPercentage <= 5){
-		document.getElementById("entity").setAttribute("visible", "true");        
 	    document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);
 	    document.getElementById("status").setAttribute("value", "INICIO DE OP"); //pode ser "INICIO DE OP" OU "TROCA DE OP"
 	    // document.getElementById("item").setAttribute("value", stopDetails.name);
@@ -260,21 +267,11 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 
 	// TROCA DE OP - TESTAR
 	if(statusPercentage > 95){
-		document.getElementById("entity").setAttribute("visible", "true");        
 	    document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);        
 	    document.getElementById("status").setAttribute("value", "TROCA DE OP");
 	    updateProductionStatus(machineDetails);
 	}
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-	updateProductionBar();
-	initAR();
-	updateMachineStatus()
-	updateStatusPercentage()
-	updateProductionBar()
-	updateProductionStatus()
-});
 
 
 // BARRA DE PRODUÇÃO .........................................................
@@ -309,3 +306,89 @@ function updateProductionStatus() {
 	updateProductionBar(updateStatusPercentage()); 
 }
 setInterval(updateProductionStatus, 10000);  // Atualiza a cada 10 segundo
+
+
+// MARCADOR ......................................................................
+
+// Track the currently active marker to prevent multiple detections
+let activeMarker = null;
+// Stores the last detected machine details
+let lastDetectedMachineDetails = null; 
+
+async function handleMarkerDetection(markerId) {
+    if (activeMarker) {
+        console.log(`Another marker (${activeMarker}) is already being processed.`);
+        return;
+    }
+
+    activeMarker = markerId;
+
+    const markerElement = document.getElementById(markerId);
+    const macAddress = markerElement?.getAttribute('data-mac');
+
+    if (macAddress) {
+        console.log(`MAC Address detected from marker ${markerId}: ${macAddress}`);
+        const machineDetails = await initAR(macAddress);
+
+        if (machineDetails) {
+            // Save details to global variable
+            lastDetectedMachineDetails = machineDetails;
+
+            // Update machine data components
+            const components = [ "cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "rescode", "itemtool", "item" ];
+            for (const component of components) {
+                const element = document.getElementById(component);
+                if (element) {
+                    element.setAttribute("value", machineDetails[component]);
+                }
+            }
+
+            // Call initTime with the fetched resCode if available
+            if (machineDetails.rescode) {
+                console.log(`Initializing time for resCode: ${machineDetails.rescode}`);
+                await initTime(machineDetails.rescode);
+            } else {
+                console.error('No valid resCode found in machineDetails.');
+            }
+
+            // Update production bar dynamically
+            updateProductionBar(machineDetails);
+        }
+    } else {
+        console.log('No valid MAC address found for this marker');
+    }
+
+    activeMarker = null; // Reset active marker
+}
+
+function handleMarkerLoss(markerId) {
+    console.log(`Marker ${markerId} lost. Retaining last detected data.`);
+    if (activeMarker === markerId) {
+        activeMarker = null;
+
+        if (lastDetectedMachineDetails) {
+            // Retain the displayed data
+            const components = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "nextop", "rescode", "itemtool", "item", "status"];
+
+            for (const component of components) {
+                const element = document.getElementById(component);
+                if (element) {
+                    element.setAttribute("value", lastDetectedMachineDetails[component]);
+                }
+            }
+
+            // Retain the production bar state
+            updateProductionBar(lastDetectedMachineDetails);
+        }
+    }
+}
+
+// Add event listeners for each registered marker
+const registeredMarkers = ['machine1-marker', 'machine2-marker','machine3-marker', 'machine4-marker'];
+registeredMarkers.forEach(markerId => {
+    const markerElement = document.getElementById(markerId);
+    if (markerElement) {
+        markerElement.addEventListener('markerFound', () => handleMarkerDetection(markerId));
+        markerElement.addEventListener('markerLost', () => handleMarkerLoss(markerId));
+    }
+});
