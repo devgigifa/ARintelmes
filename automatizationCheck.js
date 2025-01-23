@@ -50,7 +50,6 @@ const macAddresses = [
     { mac: 'D0:EF:76:46:80:8F', name: 'INSSF-10' }
 ];
 
-
 // Função para verificar o status de cada máquina
 async function checkMachineStatus(macAddress, name) {
     try {
@@ -63,51 +62,130 @@ async function checkMachineStatus(macAddress, name) {
             const status = data?.data[0]?.status;
             let statusMessage = '';
             let stopName = '';  // Variável para armazenar o nome da parada
+            let ordersMessage = '';
+            const orders = data?.data[0]?.orders?.currents;
+
             if (status === 'PRODUCTION') {
-                statusMessage = 'Em Produção';
+                if (!orders || orders.length === 0) {
+                    statusMessage = `Em Produção - Sem ordem ativa: ${name} (${macAddress})`;
+                    ordersMessage = 'Sem ordem ativa';
+                } else {
+                    statusMessage = `Em Produção com ordem ativa: ${name} (${macAddress})`;
+                    ordersMessage = `Ordem ativa: ${orders.length} ordens`;
+                }
+            
             } else if (status === 'STOP') {
-                statusMessage = 'Parado';
-                
-                // Obtendo o nome da parada, se disponível
                 const stopDetails = data?.data?.[0]?.stopDetails?.[0];
-                if (stopDetails) {
-                    stopName = stopDetails.name;
+                stopName = stopDetails ? stopDetails.name : 'Motivo desconhecido';
+                if (!orders || orders.length === 0) {
+                    statusMessage = `Parado - Sem ordem ativa: ${name} (${macAddress})`;
+                    ordersMessage = `Motivo da parada: ${stopName}`;
+                } else {
+                    statusMessage = `Parado - Com ordem ativa: ${name} (${macAddress})`;
+                    ordersMessage = `Motivo da parada: ${stopName}`;
                 }
             } else {
-                statusMessage = 'Status desconhecido';
+                statusMessage = `Status desconhecido: ${name} (${macAddress})`;
             }
 
-            // Verificação do campo orders
-            const orders = data?.data[0]?.orders?.currents;
-            let ordersMessage = '';
-            if (!orders || orders.length === 0) {
-                ordersMessage = 'Sem ordens ativas';
-            } else {
-                const production = orders[0]?.production;
-                ordersMessage = production ? `Produção ativa` : 'Sem produção ativa';
-            }
-
-            // Exibindo as informações no console
-            console.log(`${name} (${macAddress}) - Status: ${statusMessage} | ${ordersMessage}`);
+            return {
+                statusMessage,
+                macAddress,
+                name,
+                ordersMessage
+            };
             
-            // Log adicional quando a máquina está parada
-            if (status === 'STOP' && stopName) {
-                console.log(`Motivo da parada: ${stopName}`);
-            }
-
         } else {
-            console.log(`${macAddress} - Erro ao verificar status. Código: ${intelmountAPIResponse.status}`);
+            return {
+                statusMessage: `${macAddress} - Erro ao verificar status. Código: ${intelmountAPIResponse.status}`,
+                macAddress,
+                name,
+                ordersMessage: ''
+            };
         }
     } catch (error) {
-        console.log(`${macAddress} - Erro ao fazer a requisição: ${error.message}`);
+        return {
+            statusMessage: `${macAddress} - Erro ao fazer a requisição: ${error.message}`,
+            macAddress,
+            name,
+            ordersMessage: ''
+        };
     }
 }
 
-// Loop para verificar o status de todas as máquinas
+// Função para classificar os logs conforme prioridade
 async function checkAllMachines() {
+    const logs = {
+        productionWithOrder: [],
+        productionWithoutOrder: [],
+        stoppedWithoutOrder: [],
+        stoppedWithOrder: [],
+        otherStatus: []
+    };
+
     for (let machine of macAddresses) {
-        // console.log(`Verificando status de ${machine.name} (${machine.mac})...`);
-        await checkMachineStatus(machine.mac, machine.name);
+        // Coletando o status de cada máquina
+        const result = await checkMachineStatus(machine.mac, machine.name);
+
+        // Classificando os logs conforme as mensagens
+        if (result.statusMessage.includes('Em Produção com ordem ativa')) {
+            logs.productionWithOrder.push(result);
+        } else if (result.statusMessage.includes('Em Produção - Sem ordem ativa')) {
+            logs.productionWithoutOrder.push(result);
+        } else if (result.statusMessage.includes('Parado - Sem ordem ativa')) {
+            logs.stoppedWithoutOrder.push(result);
+        } else if (result.statusMessage.includes('Parado - Com ordem ativa')) {
+            logs.stoppedWithOrder.push(result);
+        } else {
+            logs.otherStatus.push(result);
+        }
+    }
+
+    // Exibindo os logs na ordem desejada
+    if (logs.productionWithOrder.length > 0) {
+        console.log("Produção com ordem ativa:");
+        logs.productionWithOrder.forEach(log => {
+            console.log(log.statusMessage);
+            console.log(`  ${log.ordersMessage}`);
+        });
+    } else {
+        console.log("Nenhuma máquina em Produção com ordem ativa.");
+    }
+
+    if (logs.productionWithoutOrder.length > 0) {
+        console.log("\nProdução sem ordem ativa:");
+        logs.productionWithoutOrder.forEach(log => {
+            console.log(log.statusMessage);
+        });
+    } else {
+        console.log("\nNenhuma máquina em Produção sem ordem ativa.");
+    }
+
+    if (logs.stoppedWithoutOrder.length > 0) {
+        console.log("\nParado sem ordem ativa:");
+        logs.stoppedWithoutOrder.forEach(log => {
+            console.log(log.statusMessage);
+            console.log(`  ${log.ordersMessage}`);
+        });
+    } else {
+        console.log("\nNenhuma máquina Parada sem ordem ativa.");
+    }
+
+    if (logs.stoppedWithOrder.length > 0) {
+        console.log("\nParado com ordem ativa:");
+        logs.stoppedWithOrder.forEach(log => {
+            console.log(log.statusMessage);
+            console.log(`  ${log.ordersMessage}`);
+        });
+    } else {
+        console.log("\nNenhuma máquina Parada com ordem ativa.");
+    }
+
+    if (logs.otherStatus.length > 0) {
+        console.log("\nOutros Status:");
+        logs.otherStatus.forEach(log => {
+            console.log(log.statusMessage);
+        });
     }
 }
 

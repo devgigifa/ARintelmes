@@ -3,7 +3,7 @@ async function initAR() {
 	const scene = document.querySelector("#a-scene");
 	scene.style.display = "block"; 
 	const components = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "nextop", "rescode", "itemtool", "item", "status"];
-	const qrCodeResponse = 'D0:EF:76:44:CC:DF'; // Endereço de MAC
+	const qrCodeResponse = 'D0:EF:76:44:C1:13'; // Endereço de MAC
 
 	if (qrCodeResponse) {
 		try {
@@ -63,11 +63,11 @@ async function initTime(resCode) {
 			console.error("Data de início não encontrada.");
 			return;
 		}
+
 		// ajustar datas para o horário local
 		const toLocalTime = (date) => new Date(new Date(date).getTime() - new Date(date).getTimezoneOffset() * 60000);
 		const localStartDate = toLocalTime(dateStart); // Ajusta o horário de início
 		const localEndDate = toLocalTime(new Date());  // Ajusta o horário atual
-
 		// log de data
 		console.log("Start Date (API, ajustado para o horário local):", localStartDate.toISOString());
 		console.log("End Date (Hora atual ajustada para o horário local):", localEndDate.toISOString());
@@ -96,15 +96,15 @@ async function initTime(resCode) {
 async function initGauges(resCode, dateStart, dateEnd) {
 	const components = ["performance", "quality", "available", "oee"];
 	try {
-		const startDateISO = new Date(dateStart).toISOString();
-		const endDateISO = new Date(dateEnd).toISOString();
+		const startDate = new Date(dateStart).toISOString();
+		const endDate = new Date(dateEnd).toISOString();
 
 		// Log para visualizar as horas de início e fim
-		console.log("Start Date (ISO):", startDateISO);
-		console.log("End Date (ISO):", endDateISO);
+		console.log("Start Date (ISO):", startDate);
+		console.log("End Date (ISO):", endDate);
 
 		const intelcalcAPIResponse = await fetch(
-			`https://intelcalc.apps.intelbras.com.br/v1/oee/time?dateEnd=${endDateISO}&dateStart=${startDateISO}&resCode=${resCode}&onlyPerf=false`
+			`https://intelcalc.apps.intelbras.com.br/v1/oee/time?dateEnd=${endDate}&dateStart=${startDate}&resCode=${resCode}&onlyPerf=false`
 		);
 		if (intelcalcAPIResponse.ok) {
 			const data = await intelcalcAPIResponse.json();
@@ -144,28 +144,24 @@ async function initGauges(resCode, dateStart, dateEnd) {
 
 // Atualiza os gauges
 function updateGauge(value, textId, ringId) {
-	const textEntity = document.getElementById(textId);
-	const ringEntity = document.getElementById(ringId);
+	const textRing = document.getElementById(textId);
+	const ring = document.getElementById(ringId);
 
-	if (textEntity && ringEntity) {
-		// atualiza o texto exibido no gauge
-		textEntity.setAttribute('value', `${textId.split('-')[1]}: ${Math.round(value)}%`);
+	if (textRing && ring) {
+		textRing.setAttribute('value', `${textId.split('-')[1]}: ${Math.round(value)}%`);
 		// verifica se o valor é maior que 100 e aplica a cor verde escuro
 		let color;
 		if (value > 100) {
-			// Para valores maiores que 100, a cor é verde escuro
-			color = 'rgb(0, 128, 0)';  // verde escuro
+			color = 'rgb(0, 128, 0)';
 		} else {
-			// calcula a cor do anel
 			const greenValue = Math.floor((value / 100) * 255);
 			const redValue = 255 - greenValue;
 			color = `rgb(${redValue}, ${greenValue}, 0)`;
 		}
-		// define a cor do anel
-		ringEntity.setAttribute('color', color);
+		ring.setAttribute('color', color);
 		// atualiza o anel
 		const length = (value / 100) * 360;
-		ringEntity.setAttribute('theta-length', length);
+		ring.setAttribute('theta-length', length);
 	} else {
 		console.error(`Element with id '${textId}' or '${ringId}' not found.`);
 	}
@@ -184,6 +180,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 // STATUS MACHINE ...............................................................................
 
 async function updateMachineStatus(status, stopDetails, machineDetails) {
+    // Função para esconder os elementos
+    const hideElements = () => {
+		const elementsToHide = [ "cycletime", "operationcode", "quantity", "quantityprod", "item", "scrapquantity", "perf", "goodquantity", "calcProdNum", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop", "statusPercentage", "lineI", "lineII"  ];
+        elementsToHide.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) element.setAttribute("visible", "false");
+        });
+    };
 
 	// PRODUÇÃO
 	if (status === "PRODUCTION") {
@@ -195,11 +199,7 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 
 		if (!machineDetails.orders) {
 			document.getElementById("tc").setAttribute("value", "sem item");
-			const elementsToHide = [ "cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "perf", "goodquantity", "calcProdNum", "item", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop", "statusPercentage", "lineI", "lineII" ];
-			for (const id of elementsToHide) {
-				const element = document.getElementById(id);
-				if (element) element.setAttribute("visible", "false");
-			}
+			hideElements()
 		}
 		updateProductionStatus(machineDetails);
 	}
@@ -212,48 +212,39 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 
 		document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);        
 		document.getElementById("status").setAttribute("value", "PARADO");
-		document.getElementById("nextop").setAttribute("value", stopDetails.name);
+		document.getElementById("item").setAttribute("value", stopDetails.name);
 
 		if (!machineDetails.orders) {
-			// Parado sem ordem
 			console.log("Entrou em parado sem ordem");
 
 			document.getElementById("entity").setAttribute("visible", "true");        
 			document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);
 			document.getElementById("status").setAttribute("value", "PARADO");
 			document.getElementById("tc").setAttribute("value", stopDetails.name);
-
-			const elementsToHide = [ "cycletime", "operationcode", "quantity", "quantityprod", "item", "scrapquantity", "perf", "goodquantity", "calcProdNum", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop", "statusPercentage", "lineI", "lineII"  ];
-			for (const id of elementsToHide) {
-				const element = document.getElementById(id);
-				if (element) element.setAttribute("visible", "false");
-			}
+			hideElements()
 		}
 		if (stopDetails.color === "CBDEE8") { document.getElementById("grandbox").setAttribute("color", "#adb3b7") }
 		if (stopDetails.color === "FFCC47") { document.getElementById("grandbox").setAttribute("color", "#eead2d") }
 		updateProductionStatus(machineDetails);
-	} 
+	}
 
-	// INATIVO
-	// if (status === "INACTIVE") {
-	// 	console.log("Entrou em inativo");
+	// INATIVO - TESTAR
+	if (status === "INACTIVE") {
+		console.log("Entrou em inativo");
 
-	// 	const elementsToHide = [  "cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "perf", "goodquantity", "calcProdNum", "tc", "op", "qtd", "qtdboa", "qtdprod", "ref"  ];
-	// 	document.getElementById("grandbox").setAttribute("color", "#adb3b7");
-	// 	document.getElementById("status").setAttribute("value", "INATIVO");
-	// 	document.getElementById("item").setAttribute("value", "FORA DE TURNO: MAQUINA DESLIGADA PLANEJADA");
-	// 	for (const id of elementsToHide) {
-	// 		const element = document.getElementById(id);
-	// 		if (element) element.setAttribute("visible", "false");
-	// 	}
-	// 	updateProductionStatus(machineDetails);
-	// }
+		document.getElementById("grandbox").setAttribute("color", "#adb3b7");
+		document.getElementById("status").setAttribute("value", "INATIVO");
+		document.getElementById("item").setAttribute("value", "FORA DE TURNO: MAQUINA DESLIGADA PLANEJADA");
+		hideElements()
+
+		updateProductionStatus(machineDetails);
+	}
 
 	// INICIO DE OP - TESTAR
 	if(statusPercentage >= 0 && statusPercentage <= 5){
 		document.getElementById("entity").setAttribute("visible", "true");        
 	    document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);
-	    document.getElementById("status").setAttribute("value", "INICIO DE OP"); //pode ser "INICIO DE OP" OU "TROCA DE OP"
+	    document.getElementById("status").setAttribute("value", "INICIO DE OP");
 	    // document.getElementById("item").setAttribute("value", stopDetails.name);
 	    updateProductionStatus(machineDetails);
 	}
@@ -285,23 +276,26 @@ function updateStatusPercentage() {
 	const quantity = getValue("quantity");
 	const quantityprod = getValue("quantityprod") || 1; // Evitar divisão por zero
 	const refuge = getValue("refuge");
-	const percentage = refuge ? ((quantityprod - refuge) / quantity) * 100 : (quantityprod / quantity) * 100;    
-	const finalPercentage = Math.max(0, Math.min(100, percentage.toFixed(2))); // Limita entre 0 e 100
+
+	// Calcula o percentual diretamente, limitando entre 0 e 100
+	const percentage = Math.max(0, Math.min(100, refuge ? ((quantityprod - refuge) / quantity) * 100 : (quantityprod / quantity) * 100));
+
 	const element = document.getElementById("statusPercentage");
-	element?.setAttribute("value", `${finalPercentage}%`);
-	return finalPercentage;
+	element?.setAttribute("value", `${percentage.toFixed(2)}%`);
+	return percentage;
 }
 
 // Função que ajusta o tamanho da barra de produção com base no percentual
 function updateProductionBar(value) {
 	const barFill = document.getElementById("production-bar");
 	if (barFill) {
-		const fillScale = value / 100; 
+		const fillScale = value / 100;
 		const startPos = fillScale * 1.3;
 		const newPos = -0.65 + (startPos / 2);
 		barFill.setAttribute("scale", `${startPos} 0.1 0.1`);
 		barFill.setAttribute("position", `${newPos} -0.1 0`);
 	}
+	return fillScale
 }
 
 // Função principal para sincronizar statusPercentage e a barra de produção
