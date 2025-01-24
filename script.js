@@ -3,7 +3,7 @@ async function initAR() {
 	const scene = document.querySelector("#a-scene");
 	scene.style.display = "block"; 
 	const components = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "nextop", "rescode", "itemtool", "item", "status"];
-	const qrCodeResponse = 'D0:EF:76:45:71:2F'; // Endereço de MAC
+	const qrCodeResponse = 'D0:EF:76:44:A8:5B'; // Endereço de MAC
 
 	if (qrCodeResponse) {
 		try {
@@ -19,7 +19,7 @@ async function initAR() {
 					quantityprod: data?.data[0]?.orders?.currents[0]?.production?.current,
 					scrapquantity: data?.data[0]?.orders?.currents[0]?.production?.refuge,
 					goodquantity: data?.data[0]?.orders?.currents[0]?.production?.current - data?.data[0]?.orders?.currents[0]?.production?.refuge,
-					perf: data?.data[0]?.orders?.currents[0]?.perf ? `perf: ${(data?.data[0]?.orders?.currents[0]?.perf).toFixed(2)}%` : "N/A",
+					perf: data?.data[0]?.orders?.currents[0]?.perf ? `perf: ${(data?.data[0]?.orders?.currents[0]?.perf).toFixed(2)}%` : "perf: N/A",
 					nextop: `Proxima OP: ${"5607040-2"}`,
 					rescode: data?.data?.[0].code,
 					itemtool: data?.data[0]?.orders?.currents[0]?.item?.tool,
@@ -63,11 +63,11 @@ async function initTime(resCode) {
 			console.error("Data de início não encontrada.");
 			return;
 		}
+
 		// ajustar datas para o horário local
 		const toLocalTime = (date) => new Date(new Date(date).getTime() - new Date(date).getTimezoneOffset() * 60000);
 		const localStartDate = toLocalTime(dateStart); // Ajusta o horário de início
 		const localEndDate = toLocalTime(new Date());  // Ajusta o horário atual
-
 		// log de data
 		console.log("Start Date (API, ajustado para o horário local):", localStartDate.toISOString());
 		console.log("End Date (Hora atual ajustada para o horário local):", localEndDate.toISOString());
@@ -96,15 +96,15 @@ async function initTime(resCode) {
 async function initGauges(resCode, dateStart, dateEnd) {
 	const components = ["performance", "quality", "available", "oee"];
 	try {
-		const startDateISO = new Date(dateStart).toISOString();
-		const endDateISO = new Date(dateEnd).toISOString();
+		const startDate = new Date(dateStart).toISOString();
+		const endDate = new Date(dateEnd).toISOString();
 
 		// Log para visualizar as horas de início e fim
-		console.log("Start Date (ISO):", startDateISO);
-		console.log("End Date (ISO):", endDateISO);
+		console.log("Start Date (ISO):", startDate);
+		console.log("End Date (ISO):", endDate);
 
 		const intelcalcAPIResponse = await fetch(
-			`https://intelcalc.apps.intelbras.com.br/v1/oee/time?dateEnd=${endDateISO}&dateStart=${startDateISO}&resCode=${resCode}&onlyPerf=false`
+			`https://intelcalc.apps.intelbras.com.br/v1/oee/time?dateEnd=${endDate}&dateStart=${startDate}&resCode=${resCode}&onlyPerf=false`
 		);
 		if (intelcalcAPIResponse.ok) {
 			const data = await intelcalcAPIResponse.json();
@@ -115,7 +115,7 @@ async function initGauges(resCode, dateStart, dateEnd) {
 				oee: data?.data?.oee,
 			};
 
-			// Atualiza os gauges
+			// Atualiza textos gauges
 			components.forEach((component) => {
 				const elementText = document.getElementById(`text-${component}`);
 				const elementRing = document.getElementById(`ring-${component}`);
@@ -129,12 +129,12 @@ async function initGauges(resCode, dateStart, dateEnd) {
 			});
 
 			// Simula atualizações periódicas a cada 15 segundos
-			setInterval(() => {
-				components.forEach((component) => {
-					const value = gaugeDetails[component];
-					updateGauge(value, `text-${component}`, `ring-${component}`);
-				});
-			}, 15000);
+			// setInterval(() => {
+			// 	components.forEach((component) => {
+			// 		const value = gaugeDetails[component];
+			// 		updateGauge(value, `text-${component}`, `ring-${component}`);
+			// 	});
+			// }, 15000);
 		}
 	} catch (error) {
 		console.error("Falha ao buscar dados:", error);
@@ -199,7 +199,8 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 
 		if (!machineDetails.orders) {
 			document.getElementById("tc").setAttribute("value", "sem item");
-			hideElements()		
+			document.getElementById("bar").setAttribute("visible", "true");
+			hideElements()
 		}
 		updateProductionStatus(machineDetails);
 	}
@@ -221,22 +222,24 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 			document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);
 			document.getElementById("status").setAttribute("value", "PARADO");
 			document.getElementById("tc").setAttribute("value", stopDetails.name);
-			hideElements()		
+			document.getElementById("bar").setAttribute("visible", "true");
+			hideElements()
 		}
-		if (stopDetails.color === "CBDEE8") { document.getElementById("grandbox").setAttribute("color", "#adb3b7") }
+		if (stopDetails.color === "CBDEE8") { document.getElementById("grandbox").setAttribute("color", "#bdbdbd") }
 		if (stopDetails.color === "FFCC47") { document.getElementById("grandbox").setAttribute("color", "#eead2d") }
 		updateProductionStatus(machineDetails);
-	} 
+	}
 
-	// INATIVO
+	// INATIVO - TESTAR
 	if (status === "INACTIVE") {
 		console.log("Entrou em inativo");
 
 		document.getElementById("grandbox").setAttribute("color", "#adb3b7");
 		document.getElementById("status").setAttribute("value", "INATIVO");
 		document.getElementById("item").setAttribute("value", "FORA DE TURNO: MAQUINA DESLIGADA PLANEJADA");
-		hideElements()
+		document.getElementById("bar").setAttribute("visible", "true");
 
+		hideElements()
 		updateProductionStatus(machineDetails);
 	}
 
@@ -244,7 +247,7 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 	if(statusPercentage >= 0 && statusPercentage <= 5){
 		document.getElementById("entity").setAttribute("visible", "true");        
 	    document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);
-	    document.getElementById("status").setAttribute("value", "INICIO DE OP"); //pode ser "INICIO DE OP" OU "TROCA DE OP"
+	    document.getElementById("status").setAttribute("value", "INICIO DE OP");
 	    // document.getElementById("item").setAttribute("value", stopDetails.name);
 	    updateProductionStatus(machineDetails);
 	}
@@ -276,18 +279,20 @@ function updateStatusPercentage() {
 	const quantity = getValue("quantity");
 	const quantityprod = getValue("quantityprod") || 1; // Evitar divisão por zero
 	const refuge = getValue("refuge");
-	const percentage = refuge ? ((quantityprod - refuge) / quantity) * 100 : (quantityprod / quantity) * 100;    
-	const finalPercentage = Math.max(0, Math.min(100, percentage.toFixed(2))); // Limita entre 0 e 100
+
+	// Calcula o percentual diretamente, limitando entre 0 e 100
+	const percentage = Math.max(0, Math.min(100, refuge ? ((quantityprod - refuge) / quantity) * 100 : (quantityprod / quantity) * 100));
+
 	const element = document.getElementById("statusPercentage");
-	element?.setAttribute("value", `${finalPercentage}%`);
-	return finalPercentage;
+	element?.setAttribute("value", `${percentage.toFixed(2)}%`);
+	return percentage;
 }
 
 // Função que ajusta o tamanho da barra de produção com base no percentual
 function updateProductionBar(value) {
 	const barFill = document.getElementById("production-bar");
 	if (barFill) {
-		const fillScale = value / 100; 
+		const fillScale = value / 100;
 		const startPos = fillScale * 1.3;
 		const newPos = -0.65 + (startPos / 2);
 		barFill.setAttribute("scale", `${startPos} 0.1 0.1`);

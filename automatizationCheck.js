@@ -186,6 +186,8 @@ async function checkAllMachines() {
         logs.otherStatus.forEach(log => {
             console.log(log.statusMessage);
         });
+    } else {
+        console.log("\nNenhuma máquina com outros status.");
     }
 }
 

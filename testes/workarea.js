@@ -3,7 +3,7 @@ async function initAR() {
 	const scene = document.querySelector("#a-scene");
 	scene.style.display = "block"; 
 	const components = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "nextop", "rescode", "itemtool", "item", "status"];
-	const qrCodeResponse = 'D0:EF:76:44:C1:13'; // Endereço de MAC
+	const qrCodeResponse = 'D0:EF:76:46:72:0B'; // Endereço de MAC
 
 	if (qrCodeResponse) {
 		try {
@@ -19,13 +19,15 @@ async function initAR() {
 					quantityprod: data?.data[0]?.orders?.currents[0]?.production?.current,
 					scrapquantity: data?.data[0]?.orders?.currents[0]?.production?.refuge,
 					goodquantity: data?.data[0]?.orders?.currents[0]?.production?.current - data?.data[0]?.orders?.currents[0]?.production?.refuge,
-					perf: data?.data[0]?.orders?.currents[0]?.perf ? `perf: ${(data?.data[0]?.orders?.currents[0]?.perf).toFixed(2)}%` : "N/A",
+					perf: data?.data[0]?.orders?.currents[0]?.perf ? `perf: ${(data?.data[0]?.orders?.currents[0]?.perf).toFixed(2)}%` : "perf: N/A",
 					nextop: `Proxima OP: ${"5607040-2"}`,
 					rescode: data?.data?.[0].code,
 					itemtool: data?.data[0]?.orders?.currents[0]?.item?.tool,
 					itemname: data?.data[0]?.orders?.currents[0]?.item?.name,
 					item: `${data?.data[0]?.orders?.currents[0]?.item?.code} - ${data?.data[0]?.orders?.currents[0]?.item?.name}`,
 					orders: data?.data[0]?.orders?.currents[0].production,
+					// error: data?data[0]?.error
+					// errorMessage: data?data[0]?.errorMessage
 				};
 
 				// Atualiza todos os componentes
@@ -115,7 +117,7 @@ async function initGauges(resCode, dateStart, dateEnd) {
 				oee: data?.data?.oee,
 			};
 
-			// Atualiza os gauges
+			// Atualiza textos gauges
 			components.forEach((component) => {
 				const elementText = document.getElementById(`text-${component}`);
 				const elementRing = document.getElementById(`ring-${component}`);
@@ -129,12 +131,12 @@ async function initGauges(resCode, dateStart, dateEnd) {
 			});
 
 			// Simula atualizações periódicas a cada 15 segundos
-			setInterval(() => {
-				components.forEach((component) => {
-					const value = gaugeDetails[component];
-					updateGauge(value, `text-${component}`, `ring-${component}`);
-				});
-			}, 15000);
+			// setInterval(() => {
+			// 	components.forEach((component) => {
+			// 		const value = gaugeDetails[component];
+			// 		updateGauge(value, `text-${component}`, `ring-${component}`);
+			// 	});
+			// }, 15000);
 		}
 	} catch (error) {
 		console.error("Falha ao buscar dados:", error);
@@ -149,7 +151,6 @@ function updateGauge(value, textId, ringId) {
 
 	if (textRing && ring) {
 		textRing.setAttribute('value', `${textId.split('-')[1]}: ${Math.round(value)}%`);
-		// verifica se o valor é maior que 100 e aplica a cor verde escuro
 		let color;
 		if (value > 100) {
 			color = 'rgb(0, 128, 0)';
@@ -189,6 +190,11 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
         });
     };
 
+// if (machineDetails.error !== null){
+// 	document.getElementById("box").setAttribute("material", "color: #fc1723, opacity: 0.9;");
+// 	document.getElementById("nextop").setAttribute("value", machineDetails.errorMessage);
+// }
+
 	// PRODUÇÃO
 	if (status === "PRODUCTION") {
 		console.log("Entrou em produção");
@@ -199,6 +205,7 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 
 		if (!machineDetails.orders) {
 			document.getElementById("tc").setAttribute("value", "sem item");
+			document.getElementById("bar").setAttribute("visible", "true");
 			hideElements()
 		}
 		updateProductionStatus(machineDetails);
@@ -221,9 +228,10 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 			document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);
 			document.getElementById("status").setAttribute("value", "PARADO");
 			document.getElementById("tc").setAttribute("value", stopDetails.name);
+			document.getElementById("bar").setAttribute("visible", "true");
 			hideElements()
 		}
-		if (stopDetails.color === "CBDEE8") { document.getElementById("grandbox").setAttribute("color", "#adb3b7") }
+		if (stopDetails.color === "CBDEE8") { document.getElementById("grandbox").setAttribute("color", "#bdbdbd") }
 		if (stopDetails.color === "FFCC47") { document.getElementById("grandbox").setAttribute("color", "#eead2d") }
 		updateProductionStatus(machineDetails);
 	}
@@ -235,8 +243,9 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 		document.getElementById("grandbox").setAttribute("color", "#adb3b7");
 		document.getElementById("status").setAttribute("value", "INATIVO");
 		document.getElementById("item").setAttribute("value", "FORA DE TURNO: MAQUINA DESLIGADA PLANEJADA");
-		hideElements()
+		document.getElementById("bar").setAttribute("visible", "true");
 
+		hideElements()
 		updateProductionStatus(machineDetails);
 	}
 
@@ -295,7 +304,6 @@ function updateProductionBar(value) {
 		barFill.setAttribute("scale", `${startPos} 0.1 0.1`);
 		barFill.setAttribute("position", `${newPos} -0.1 0`);
 	}
-	return fillScale
 }
 
 // Função principal para sincronizar statusPercentage e a barra de produção
