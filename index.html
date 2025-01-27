@@ -4,12 +4,12 @@
     <meta charset="UTF-8" />
     <title>AR Intelmes</title>
     <link rel="icon" href="https://img.icons8.com/ios_filled/200/40C057/info.png">
-        
-    <script src="https://aframe.io/releases/0.6.1/aframe.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"> </script>
 
-    <script src="script.js"></script>
-
+    <script src="https://aframe.io/releases/0.6.1/aframe.min.js"></script>    
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"> </script>
+    
+    <script src="script.js" defer></script>
+    
     <style>
         #a-scene {
             display: none;
@@ -20,9 +20,8 @@
             height: 100%;
         }
     </style>
-    
 </head>
-
+ 
 <body>
     <a-scene
         id="a-scene"
@@ -32,144 +31,171 @@
     >
         <a-entity camera position="0 1 0" look-controls="enabled: false"></a-entity>
 
-        <a-box id="grandbox" color="#000000"
-            position="0 1.25 -3"
-            rotation="0 0 0"
-            scale="2 1 0.5"
-        ></a-box>
-        <a-box id="box" material="color: black; opacity: 0.35;"
-            position="0 0.805 -3"
-            rotation="0 0 0"
-            scale="2 0.11 0.5"
-        ></a-box>
+<!-- mac -->
 
-        <a-text id="hours" color="white" value="" align="center"
-            width="1.3"
-            scale="1.2 0.7 1.2" 
-            position="-0.7 1.60 -2.4" 
-        ></a-text>
-
-        <a-text id="perf" color="white" 
-            width="1.3"
-            scale="1 0.5 1" 
-            position="0.46 1.60 -2.4"
-        ></a-text>
-
-        <a-text id="itemtool" color="white" 
-            width="1.3"
-            scale="1 0.5 1" 
-            position="0.46 1.57 -2.4"
-        ></a-text>
-
-        <a-text id="rescode" color="white" align="center"
-            width="1.3"
-            scale="3 1.8 3" 
-            position="0 1.50 -2.4" 
-        ></a-text>
-
-        <a-text id="status" color="white" align="center" 
-            width="1.3"
-            scale="2.3 1 2.3" 
-            position="0 1.30 -2" 
-        ></a-text>
+    <a-nft type="nft" url="https://cors-anywhere.herokuapp.com/https://raw.githubusercontent.com/alssnfb/nftmarkertest/main/nft_markers/machine_1/" smooth="true" smoothCount="10" smoothTolerance=".01" smoothThreshold="5" id="machine1-marker" data-mac="DD0:EF:76:46:72:0B">
+        <a-entity visible="false" position="0 0 0"></a-entity>
+    </a-nft>
     
-        <!-- Barra de Produção ................................................... -->
-        <a-entity position="0 1.43 -2.2" frustumCulled="false">
-            <a-box id="production-bar" material="color: black; opacity: 0.35;"
-                scale="0 0.1 0.1"  
-                position="-0.65 -0.1 0"
-            ></a-box>
-        </a-entity>
+    <a-nft type="nft" url="https://cors-anywhere.herokuapp.com/https://raw.githubusercontent.com/alssnfb/nftmarkertest/main/nft_markers/machine_2/" smooth="true" smoothCount="10" smoothTolerance=".01" smoothThreshold="5" id="machine2-marker" data-mac="D0:EF:76:46:72:0B">
+        <a-entity visible="false" position="0 0 0"></a-entity>
+    </a-nft>
+    
+    <a-nft type="nft" url="https://cors-anywhere.herokuapp.com/https://raw.githubusercontent.com/alssnfb/nftmarkertest/main/nft_markers/machine_3/" smooth="true" smoothCount="10" smoothTolerance=".01" smoothThreshold="5" id="machine3-marker" data-mac="D0:EF:76:46:72:0B">
+        <a-entity visible="false" position="0 0 0"></a-entity>
+    </a-nft>
+    
+    <a-nft type="nft" url="https://cors-anywhere.herokuapp.com/https://raw.githubusercontent.com/alssnfb/nftmarkertest/main/nft_markers/machine_4/" smooth="true" smoothCount="10" smoothTolerance=".01" smoothThreshold="5" id="machine4-marker" data-mac="D0:EF:76:46:72:0B">
+        <a-entity visible="false" position="0 0 0"></a-entity>
+    </a-nft>
 
-        <a-text id="statusPercentage" value="" color="white" align="center" 
-            width="1.3"
-            scale="1.5 0.9 1.5" 
-            position="0 1.25 -2.4" 
-        ></a-text> 
-        <!-- .................................................................... -->
+<a-entity id="entity" visible="false">
+    <a-box id="grandbox" material="color: black; opacity: 1;"
+        position="0 1.25 -3"
+        rotation="0 0 0"
+        scale="2 1 0.5"
+    ></a-box>
+    <a-box id="box" material="color: black; opacity: 0.35;"
+        position="0 0.805 -3"
+        rotation="0 0 0"
+        scale="2 0.11 0.5"
+    ></a-box>
 
-        <a-entity id="lineI" line="start: -0.8 1.20 -2.4; end: 0.8 1.20 -2.4; color: white"></a-entity>
+    <a-text id="hours" color="white" value="" align="center"
+        width="1.3"
+        scale="1.2 0.7 1.2" 
+        position="-0.7 1.60 -2.4" 
+    ></a-text>
 
-        <a-text id="tc" value="TC" color="white" 
-            width="1.3"
-            scale="1.2 0.8 1.2" 
-            position="-0.79 1.15 -2.4" 
-        ></a-text>
-        <a-text id="cycletime" color="white" align="center" 
-            width="1.3"
-            scale="1.2 0.8 1.2" 
-            position="-0.75 1.08 -2.4" 
-        ></a-text>  
+    <a-text id="perf" color="white" 
+        width="1.3"
+        scale="1 0.5 1" 
+        position="0.41 1.60 -2.4"
+    ></a-text>
 
-        <a-text id="op" value="OP" color="white" align="center"
-            width="1.3"
-            scale="1.2 0.8 1.2" 
-            position="-0.45 1.15 -2.4" 
-        ></a-text>
-        <a-text id="operationcode" color="white" align="center"
-            width="1.3"
-            scale="1 0.8 1" 
-            position="-0.45 1.08 -2.4" 
-        ></a-text>  
+    <a-text id="itemtool" color="white" 
+        width="1.3"
+        scale="1 0.5 1" 
+        position="0.41 1.57 -2.4"
+    ></a-text>
 
-        <a-text id="qtd" value="QTD" color="white" align="center"
-            width="1.3"
-            scale="1.2 0.8 1.2" 
-            position="-0.15 1.15 -2.4"
-        ></a-text>
-        <a-text id="quantity" color="white" align="center"
-            width="1.3"
-            scale="1.2 0.8 1.2" 
-            position="-0.15 1.08 -2.4" 
-        ></a-text>  
+    <a-text id="rescode" color="white" align="center"
+        width="1.3"
+        scale="3 1.8 3" 
+        position="0 1.50 -2.4" 
+    ></a-text>
 
-        <a-text id="qtdprod" value="QTD PROD" color="white" align="center" 
-            width="1.3"
-            scale="1.2 0.8 1.2" 
-            position="0.14 1.15 -2.4" 
-        ></a-text>
-        <a-text id="quantityprod" color="white" align="center" 
-            width="1.3"
-            scale="1.2 0.8 1.2" 
-            position="0.14 1.08 -2.4" 
-        ></a-text>  
+    <a-text id="status" color="white" align="center" 
+        width="1.3"
+        scale="2.3 1 2.3" 
+        position="0 1.30 -2" 
+    ></a-text>
 
-        <a-text id="ref" value="REF" color="white" align="center"
-            width="1.3"
-            scale="1.2 0.8 1.2" 
-            position="0.40 1.15 -2.4" 
-        ></a-text>
-        <a-text id="scrapquantity" color="white" align="center" 
-            width="1.3"
-            scale="1.2 0.8 1.2" 
-            position="0.40 1.08 -2.4" 
-        ></a-text>
+    <!-- Barra de Produção ................................................... -->
+    <a-entity position="0 1.43 -2.2" frustumCulled="false">
+        <a-box id="production-bar" material="color: black; opacity: 0.35;"
+            scale="0 0.1 0.1"  
+            position="-0.65 -0.1 0"
+        ></a-box>
+    </a-entity>
 
-        <a-text id="qtdboa" value="QTD BOA" align="center"
-            color="white" 
-            width="1.3"
-            scale="1.2 0.8 1.2" 
-            position="0.65 1.15 -2.4" 
-        ></a-text>
-        <a-text id="goodquantity" color="white" align="center" 
-            width="1.3"
-            scale="1.2 0.8 1.2" 
-            position="0.65 1.08 -2.4" 
-        ></a-text>
+    <a-text id="statusPercentage" value="" color="white" align="center" 
+        width="1.3"
+        scale="1.5 0.9 1.5" 
+        position="0 1.25 -2.4" 
+    ></a-text> 
 
-        <a-entity id="lineII" line="start: -0.8 1.03 -2.4; end: 0.8 1.03 -2.4; color: white" frustumCulled="false"></a-entity>
+    <a-box id="bar" material="color: black; opacity: 0.30;"
+        scale="1.5 0.1 0.1"  
+        position="0 1.35 -2.4"
+        visible="false"
+    ></a-box>
+    <!-- .................................................................... -->
 
-        <a-text id="item" color="white" align="left" 
-            width="1.3"
-            scale="1.2 0.8 1.2" 
-            position="-0.8 0.95 -2.4" 
-        ></a-text>
+    <a-entity id="lineI" line="start: -0.8 1.20 -2.4; end: 0.8 1.20 -2.4; color: white"></a-entity>
 
-        <a-text id="nextop" color="white" align="left"
-            width="1.3"
-            scale="1.2 0.8 1.2" 
-            position="-0.8 0.84 -2.4" 
-        ></a-text> 
+    <a-text id="tc" value="TC" color="white" 
+        width="1.3"
+        scale="1.2 0.8 1.2" 
+        position="-0.79 1.15 -2.4" 
+    ></a-text>
+    <a-text id="cycletime" color="white" align="center" 
+        width="1.3"
+        scale="1.2 0.8 1.2" 
+        position="-0.75 1.08 -2.4" 
+    ></a-text>  
+
+    <a-text id="op" value="OP" color="white" align="center"
+        width="1.3"
+        scale="1.2 0.8 1.2" 
+        position="-0.45 1.15 -2.4" 
+    ></a-text>
+    <a-text id="operationcode" color="white" align="center"
+        width="1.3"
+        scale="1 0.8 1" 
+        position="-0.45 1.08 -2.4" 
+    ></a-text>  
+
+    <a-text id="qtd" value="QTD" color="white" align="center"
+        width="1.3"
+        scale="1.2 0.8 1.2" 
+        position="-0.15 1.15 -2.4"
+    ></a-text>
+    <a-text id="quantity" color="white" align="center"
+        width="1.3"
+        scale="1.2 0.8 1.2" 
+        position="-0.15 1.08 -2.4" 
+    ></a-text>  
+
+    <a-text id="qtdprod" value="QTD PROD" color="white" align="center" 
+        width="1.3"
+        scale="1.2 0.8 1.2" 
+        position="0.14 1.15 -2.4" 
+    ></a-text>
+    <a-text id="quantityprod" color="white" align="center" 
+        width="1.3"
+        scale="1.2 0.8 1.2" 
+        position="0.14 1.08 -2.4" 
+    ></a-text>  
+
+    <a-text id="ref" value="REF" color="white" align="center"
+        width="1.3"
+        scale="1.2 0.8 1.2" 
+        position="0.40 1.15 -2.4" 
+    ></a-text>
+    <a-text id="scrapquantity" color="white" align="center" 
+        width="1.3"
+        scale="1.2 0.8 1.2" 
+        position="0.40 1.08 -2.4" 
+    ></a-text>
+
+    <a-text id="qtdboa" value="QTD BOA" align="center"
+        color="white" 
+        width="1.3"
+        scale="1.2 0.8 1.2" 
+        position="0.65 1.15 -2.4" 
+    ></a-text>
+    <a-text id="goodquantity" color="white" align="center" 
+        width="1.3"
+        scale="1.2 0.8 1.2" 
+        position="0.65 1.08 -2.4" 
+    ></a-text>
+
+    <a-entity id="lineII" line="start: -0.8 1.03 -2.4; end: 0.8 1.03 -2.4; color: white" frustumCulled="false"></a-entity>
+
+    <a-text id="item" color="white" align="left" 
+        width="1.3"
+        scale="1.2 0.8 1.2" 
+        position="-0.8 0.95 -2.4" 
+    ></a-text>
+
+    <a-text id="nextop" color="white" align="left"
+        width="1.3"
+        scale="1.2 0.8 1.2" 
+        position="-0.8 0.84 -2.4" 
+    ></a-text> 
+</a-entity>
+
 
     <!-- GAUGES -->
     <a-entity id="gauges-group" frustumCulled="false">
@@ -178,7 +204,7 @@
             scale="0.35 0.35 0.35"
         >
         <a-ring id="ring-oee" color="blue" radius-inner="0.35" radius-outer="0.45" theta-start="0" theta-length="0"></a-ring>
-        <a-text id="text-oee" value="OEE: " align="center" color="white" position="0 0.6 0" ></a-text>
+        <a-text id="text-oee" value="" align="center" color="white" position="0 0.6 0" ></a-text>
         </a-entity>
 
         <a-entity id="gauge-Disponibilidade" 
@@ -186,7 +212,7 @@
             scale="0.35 0.35 0.35"  
         >
         <a-ring id="ring-available" color="orange" radius-inner="0.35" radius-outer="0.45" theta-start="0" theta-length="0" ></a-ring>
-        <a-text id="text-available" value="Disp: " position="0 0.6 0" align="center" color="white"></a-text>
+        <a-text id="text-available" value="" position="0 0.6 0" align="center" color="white"></a-text>
         </a-entity>
 
         <a-entity id="gauge-Performance" 
@@ -194,7 +220,7 @@
             scale="0.35 0.35 0.35"  
         >
         <a-ring id="ring-performance" color="green" radius-inner="0.35" radius-outer="0.45" theta-start="0" theta-length="0" ></a-ring>
-        <a-text id="text-performance" value="Perf: " position="0 0.6 0" align="center" color="white" ></a-text>
+        <a-text id="text-performance" value="" position="0 0.6 0" align="center" color="white" ></a-text>
         </a-entity>
 
         <a-entity id="gauge-Qualidade" 
@@ -202,16 +228,49 @@
             scale="0.35 0.35 0.35"  
         >
         <a-ring id="ring-quality" color="yellow" radius-inner="0.35" radius-outer="0.45" theta-start="0" theta-length="0"></a-ring>
-        <a-text id="text-quality" value="Qual: " position="0 0.6 0" align="center" color="white"></a-text>
+        <a-text id="text-quality" value="" position="0 0.6 0" align="center" color="white"></a-text>
         </a-entity>
     </a-entity>
-</a-scene>
+<script>
+        // Detect when NFT markers are found
+        document.querySelector('#machine1-marker').addEventListener('markerFound', async function () {
+            console.log('Machine 1 NFT marker detected!');
+            await fetchMachineData(); // Call your function to fetch data
+        });
 
+        document.querySelector('#machine1-marker').addEventListener('markerLost', function () {
+            console.log('Machine 1 marker lost.');
+        });
+
+        document.querySelector('#machine2-marker').addEventListener('markerFound', async function () {
+            console.log('Machine 2 NFT marker detected!');
+            await fetchMachineData();
+        });
+
+        document.querySelector('#machine2-marker').addEventListener('markerLost', function () {
+            console.log('Machine 2 marker lost.');
+        });
+    </script>
+    
+</a-scene>
+ 
     <script>
-        navigator.mediaDevices
-            .getUserMedia({ video: true })
-            .then(initAR)
+    navigator.mediaDevices
+            .getUserMedia({
+                video: {
+                    width: { ideal: 1280 }, // Ideal width
+                    height: { ideal: 960 }, // Ideal height
+                    facingMode: "environment", // Use rear camera if available
+                },
+            })
+            .then((stream) => {
+                const video = document.createElement("video");
+                video.srcObject = stream;
+                video.play();
+                initAR();
+            })
             .catch((err) => alert("Permissão de câmera negada:", err));
     </script>
 </body>
 </html>
+ 
