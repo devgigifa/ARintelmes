@@ -92,7 +92,7 @@ async function initTime(macAddress) {
             console.log("Time details:", timeDetails);
 
             const startDate = new Date(timeDetails.dateStart);
-            const endDate = timeDetails.dateEnd ? new Date(timeDetails.dateEnd) : new Date();
+            const endDate = new Date();
             const operationTime = (endDate - startDate) / 60000;
 
             const hours = Math.floor(operationTime / 60);
@@ -140,14 +140,14 @@ async function initGauges(resCode, dateStart, dateEnd) {
     const components = ["performance", "quality", "available", "oee"];
 
     try {
-        const startDateISO = new Date(dateStart).toISOString();
-        const endDateISO = new Date(dateEnd).toISOString();
+        const startDate = new Date(dateStart).toISOString();
+        const endDate = new Date(dateEnd).toISOString();
 
-        console.log("Start Date (ISO):", startDateISO);
-        console.log("End Date (ISO):", endDateISO);
+        console.log("Start Date (ISO):", startDate);
+        console.log("End Date (ISO):", endDate);
 
         const intelcalcAPIResponse = await fetch(
-            `https://intelcalc.apps.intelbras.com.br/v1/oee/time?dateEnd=${endDateISO}&dateStart=${startDateISO}&resCode=${resCode}&onlyPerf=false`
+            `https://intelcalc.apps.intelbras.com.br/v1/oee/time?dateEnd=${endDate}&dateStart=${startDate}&resCode=${resCode}&onlyPerf=false`
         );
 
         if (intelcalcAPIResponse.ok) {
@@ -185,32 +185,25 @@ async function initGauges(resCode, dateStart, dateEnd) {
     }
 }
 
- 
- 
 // Atualiza os gauges
 function updateGauge(value, textId, ringId) {
-	const textEntity = document.getElementById(textId);
-	const ringEntity = document.getElementById(ringId);
+	const textRing = document.getElementById(textId);
+	const ring = document.getElementById(ringId);
 
-	if (textEntity && ringEntity) {
-		// atualiza o texto exibido no gauge
-		textEntity.setAttribute('value', `${textId.split('-')[1]}: ${Math.round(value)}%`);
-		// verifica se o valor é maior que 100 e aplica a cor verde escuro
+	if (textRing && ring) {
+		textRing.setAttribute('value', `${textId.split('-')[1]}: ${Math.round(value)}%`);
 		let color;
 		if (value > 100) {
-			// Para valores maiores que 100, a cor é verde escuro
-			color = 'rgb(0, 128, 0)';  // verde escuro
+			color = 'rgb(0, 128, 0)';
 		} else {
-			// calcula a cor do anel
 			const greenValue = Math.floor((value / 100) * 255);
 			const redValue = 255 - greenValue;
 			color = `rgb(${redValue}, ${greenValue}, 0)`;
 		}
-		// define a cor do anel
-		ringEntity.setAttribute('color', color);
+		ring.setAttribute('color', color);
 		// atualiza o anel
 		const length = (value / 100) * 360;
-		ringEntity.setAttribute('theta-length', length);
+		ring.setAttribute('theta-length', length);
 	} else {
 		console.error(`Element with id '${textId}' or '${ringId}' not found.`);
 	}
