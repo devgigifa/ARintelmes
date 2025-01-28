@@ -45,7 +45,6 @@ const macAddresses = [
     { mac: 'D0:EF:76:45:ED:DF', name: 'INSSE-08' }, 
     { mac: 'D0:EF:76:46:72:0B', name: 'INSSE-01' },
     { mac: 'D0:EF:76:46:72:3F', name: 'INSSF-08' },
-    { mac: 'D0:EF:76:46:76:BB', name: 'INSCN-02' },
     { mac: 'D0:EF:76:46:79:9B', name: 'INSSF-07' },
     { mac: 'D0:EF:76:46:80:8F', name: 'INSSF-10' }
 ];

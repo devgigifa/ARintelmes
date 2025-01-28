@@ -245,7 +245,8 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
     // Função para esconder os elementos
     const hideElements = () => {
 		const elementsToHide = [ "cycletime", "operationcode", "quantity", "quantityprod", "item", "scrapquantity", "perf", "goodquantity", "calcProdNum", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop", "statusPercentage", "lineI", "lineII"  ];
-        elementsToHide.forEach(id => {
+		document.getElementById("bar").setAttribute("opacity", "0.35");
+		elementsToHide.forEach(id => {
             const element = document.getElementById(id);
             if (element) element.setAttribute("visible", "false");
         });
@@ -266,7 +267,6 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 
 		if (!machineDetails.orders) {
 			document.getElementById("tc").setAttribute("value", "sem item");
-			document.getElementById("bar").setAttribute("visible", "true");
 			hideElements()
 		}
 		updateProductionStatus(machineDetails);
@@ -289,7 +289,6 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 			document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);
 			document.getElementById("status").setAttribute("value", "PARADO");
 			document.getElementById("tc").setAttribute("value", stopDetails.name);
-			document.getElementById("bar").setAttribute("visible", "true");
 			hideElements()
 		}
 		if (stopDetails.color === "CBDEE8") { document.getElementById("grandbox").setAttribute("color", "#bdbdbd") }
@@ -304,7 +303,7 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 		document.getElementById("grandbox").setAttribute("color", "#adb3b7");
 		document.getElementById("status").setAttribute("value", "INATIVO");
 		document.getElementById("item").setAttribute("value", "FORA DE TURNO: MAQUINA DESLIGADA PLANEJADA");
-		document.getElementById("bar").setAttribute("visible", "true");
+		document.getElementById("bar").setAttribute("opacity", "0.35");
 
 		hideElements()
 		updateProductionStatus(machineDetails);
@@ -315,7 +314,9 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 		document.getElementById("entity").setAttribute("visible", "true");        
 	    document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);
 	    document.getElementById("status").setAttribute("value", "INICIO DE OP");
+		document.getElementById("status").setAttribute("color", "#DA4710");
 	    // document.getElementById("item").setAttribute("value", stopDetails.name);
+
 	    updateProductionStatus(machineDetails);
 	}
 
@@ -324,6 +325,9 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 		document.getElementById("entity").setAttribute("visible", "true");        
 	    document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);        
 	    document.getElementById("status").setAttribute("value", "TROCA DE OP");
+		document.getElementById("status").setAttribute("color", "#DA4710");
+		// document.getElementById("item").setAttribute("value", stopDetails.name);
+
 	    updateProductionStatus(machineDetails);
 	}
 }
