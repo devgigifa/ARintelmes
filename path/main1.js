@@ -3,7 +3,7 @@ async function initAR() {
 	const scene = document.querySelector("#a-scene");
 	scene.style.display = "block"; 
 	const components = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "nextop", "rescode", "itemtool", "item", "status"];
-	const qrCodeResponse = 'D0:EF:76:46:76:BB'; // Endereço de MAC
+	const qrCodeResponse = 'D0:EF:76:44:A8:5B'; // Endereço de MAC
 
 	if (qrCodeResponse) {
 		try {
@@ -26,8 +26,6 @@ async function initAR() {
 					itemname: data?.data[0]?.orders?.currents[0]?.item?.name,
 					item: `${data?.data[0]?.orders?.currents[0]?.item?.code} - ${data?.data[0]?.orders?.currents[0]?.item?.name}`,
 					orders: data?.data[0]?.orders?.currents[0].production,
-					// error: data?data[0]?.error
-					// errorMessage: data?data[0]?.errorMessage
 				};
 
 				// Atualiza todos os componentes
@@ -151,6 +149,7 @@ function updateGauge(value, textId, ringId) {
 
 	if (textRing && ring) {
 		textRing.setAttribute('value', `${textId.split('-')[1]}: ${Math.round(value)}%`);
+		// verifica se o valor é maior que 100 e aplica a cor verde escuro
 		let color;
 		if (value > 100) {
 			color = 'rgb(0, 128, 0)';
@@ -184,20 +183,11 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
     // Função para esconder os elementos
     const hideElements = () => {
 		const elementsToHide = [ "cycletime", "operationcode", "quantity", "quantityprod", "item", "scrapquantity", "perf", "goodquantity", "calcProdNum", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop", "statusPercentage", "lineI", "lineII"  ];
-		document.getElementById("bar").setAttribute("opacity", "0.35");
-		elementsToHide.forEach(id => {
+        elementsToHide.forEach(id => {
             const element = document.getElementById(id);
             if (element) element.setAttribute("visible", "false");
         });
     };
-
-// if (machineDetails.error !== null){
-	// 	document.getElementById("box").setAttribute("material", "color: #fc1723, opacity: 0.9;"); // funciona?
-	// document.getElementById("box").setAttribute("color", "#fc1723");
-	// document.getElementById("box").setAttribute("opacity", "0.9");
-
-	// 	document.getElementById("nextop").setAttribute("value", machineDetails.errorMessage);
-// }
 
 	// PRODUÇÃO
 	if (status === "PRODUCTION") {
@@ -206,9 +196,10 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 		document.getElementById("entity").setAttribute("visible", "true");        
 		document.getElementById("grandbox").setAttribute("color", "#00a335");
 		document.getElementById("status").setAttribute("value", "PRODUCAO");
-			
+
 		if (!machineDetails.orders) {
 			document.getElementById("tc").setAttribute("value", "sem item");
+			document.getElementById("bar").setAttribute("visible", "true");
 			hideElements()
 		}
 		updateProductionStatus(machineDetails);
@@ -231,6 +222,7 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 			document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);
 			document.getElementById("status").setAttribute("value", "PARADO");
 			document.getElementById("tc").setAttribute("value", stopDetails.name);
+			document.getElementById("bar").setAttribute("visible", "true");
 			hideElements()
 		}
 		if (stopDetails.color === "CBDEE8") { document.getElementById("grandbox").setAttribute("color", "#bdbdbd") }
@@ -245,7 +237,7 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 		document.getElementById("grandbox").setAttribute("color", "#adb3b7");
 		document.getElementById("status").setAttribute("value", "INATIVO");
 		document.getElementById("item").setAttribute("value", "FORA DE TURNO: MAQUINA DESLIGADA PLANEJADA");
-		document.getElementById("bar").setAttribute("opacity", "0.35");
+		document.getElementById("bar").setAttribute("visible", "true");
 
 		hideElements()
 		updateProductionStatus(machineDetails);
@@ -256,9 +248,7 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 		document.getElementById("entity").setAttribute("visible", "true");        
 	    document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);
 	    document.getElementById("status").setAttribute("value", "INICIO DE OP");
-		document.getElementById("status").setAttribute("color", "#DA4710");
 	    // document.getElementById("item").setAttribute("value", stopDetails.name);
-
 	    updateProductionStatus(machineDetails);
 	}
 
@@ -267,9 +257,6 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 		document.getElementById("entity").setAttribute("visible", "true");        
 	    document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);        
 	    document.getElementById("status").setAttribute("value", "TROCA DE OP");
-		document.getElementById("status").setAttribute("color", "#DA4710");
-		// document.getElementById("item").setAttribute("value", stopDetails.name);
-
 	    updateProductionStatus(machineDetails);
 	}
 }
@@ -282,6 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	updateProductionBar()
 	updateProductionStatus()
 });
+
 
 // BARRA DE PRODUÇÃO .........................................................
 
