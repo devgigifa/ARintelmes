@@ -3,7 +3,7 @@ async function initAR() {
 	const scene = document.querySelector("#a-scene");
 	scene.style.display = "block"; 
 	const components = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "nextop", "rescode", "itemtool", "item", "status"];
-	const qrCodeResponse = 'D0:EF:76:45:42:1B'; // Endereço de MAC
+	const qrCodeResponse = 'D0:EF:76:46:72:0B'; // Endereço de MAC
 
 	if (qrCodeResponse) {
 		try {

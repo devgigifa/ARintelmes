@@ -1,25 +1,17 @@
+// Função para inicializar a AR e retornar o rescode
+async function initAR() {
+	const scene = document.querySelector("#a-scene");
+	scene.style.display = "block"; 
+	const components = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "nextop", "rescode", "itemtool", "item", "status"];
+	const qrCodeResponse = 'D0:EF:76:44:C4:EF'; // Endereço de MAC
 
-document.addEventListener('DOMContentLoaded', () => {
-	initAR();
-	updateMachineStatus()
-	updateStatusPercentage()
-	updateProductionBar()
-	updateProductionStatus()
-});
-
-async function initAR(macAddress) {
-    const scene = document.querySelector("#a-scene");
-    scene.style.display = "block";
-    const components = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "nextop", "rescode", "itemtool", "item", "status"];
-
-    if (macAddress) {
-        try {
-            const intelmountAPIResponse = await fetch(`https://intelmount.apps.intelbras.com.br/v1/resources/mount?mac=${macAddress}`);
-            if (intelmountAPIResponse.ok) {
+	if (qrCodeResponse) {
+		try {
+			const intelmountAPIResponse = await fetch(`https://intelmount.apps.intelbras.com.br/v1/resources/mount?mac=${qrCodeResponse}`);
+			if (intelmountAPIResponse.ok) {
 				const data = await intelmountAPIResponse.json();
 				const status = data?.data[0]?.status;
 				const stopDetails = data?.data?.[0]?.stopDetails?.[0] ? { color: data.data[0].stopDetails[0].color, name: data.data[0].stopDetails[0].name } : null;
-				const rescode = data?.data?.[0].code;
 				const machineDetails = {
 					cycletime: data?.data[0]?.orders?.currents[0]?.item?.factor,
 					operationcode: data?.data[0]?.orders?.currents[0]?.operationId,
@@ -29,7 +21,7 @@ async function initAR(macAddress) {
 					goodquantity: data?.data[0]?.orders?.currents[0]?.production?.current - data?.data[0]?.orders?.currents[0]?.production?.refuge,
 					perf: data?.data[0]?.orders?.currents[0]?.perf ? `perf: ${(data?.data[0]?.orders?.currents[0]?.perf).toFixed(2)}%` : "perf: N/A",
 					nextop: `Proxima OP: ${"5607040-2"}`,
-					rescode: rescode,
+					rescode: data?.data?.[0].code,
 					itemtool: data?.data[0]?.orders?.currents[0]?.item?.tool,
 					itemname: data?.data[0]?.orders?.currents[0]?.item?.name,
 					item: `${data?.data[0]?.orders?.currents[0]?.item?.code} - ${data?.data[0]?.orders?.currents[0]?.item?.name}`,
@@ -48,33 +40,18 @@ async function initAR(macAddress) {
 				}
 				// Atualiza o status da máquina
 				updateMachineStatus(status, stopDetails, machineDetails);
+
                 return { rescode: machineDetails.rescode, statusDate: machineDetails.statusDate };  // Retorna um objeto com rescode e statusDate            
-            } else {
-                console.error("Erro na resposta da API:", intelmountAPIResponse.status);
-                return null;
-            }
-        } catch (error) {
-            console.error("Failed to fetch data:", error);
-            return null;
-        }
-    } else {
-        console.error("MAC address não fornecido.");
-        return null;
-    }
+                }
+		} catch (error) {
+			console.error("Failed to fetch data:", error);
+		}
+	}
 }
 
 // TIME ......................................................................
-async function initTime(macAddress) {
-    console.log("Initializing time with MAC Address:", macAddress);
-
-    const { resCode, statusDate } = await initAR(macAddress);
-
-    if (!resCode || typeof resCode !== "string") {
-        console.error("Invalid rescode returned from initAR:", resCode);
-        return null; // Retorne null caso o resCode seja inválido
-    }
-
-    console.log("Initializing time with rescode:", resCode);
+async function initTime(resCode, statusDate) {
+    if (!resCode || !statusDate) return;
 
     try {
         // Converter o statusDate para o horário local
@@ -99,77 +76,62 @@ async function initTime(macAddress) {
         hoursElement?.setAttribute("value", duration);
 
         return { dateStart: startDate.toISOString(), dateEnd: endDate.toISOString() };
-    } catch (error) {
-        console.error("Error while processing productive data:", error);
-    }
-    return null;
-}
 
-function updateMachineDataUI(machineDetails) {
-	const components = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "rescode", "itemtool", "item"];
-    components.forEach(component => {
-		const element = document.getElementById(component);
-        if (element) {
-			element.setAttribute("value", machineDetails[component] || "N/A");
-        }
-    });
+    } catch (error) {
+        console.error("Erro ao processar os dados:", error);
+    }
 }
 
 // GAUGES ................................................................
 
 async function initGauges(resCode, dateStart, dateEnd) {
-    if (!dateStart || !dateEnd) {
-        console.error("Invalid dateStart or dateEnd provided to initGauges.");
-        return;
-    }
+	const components = ["performance", "quality", "available", "oee"];
+	try {
+		const startDate = new Date(dateStart).toISOString();
+		const endDate = new Date(dateEnd).toISOString();
 
-    const components = ["performance", "quality", "available", "oee"];
+		// Log para visualizar as horas de início e fim
+		console.log("Start Date (ISO):", startDate);
+		console.log("End Date (ISO):", endDate);
 
-    try {
-        const startDate = new Date(dateStart).toISOString();
-        const endDate = new Date(dateEnd).toISOString();
+		const intelcalcAPIResponse = await fetch(
+			`https://intelcalc.apps.intelbras.com.br/v1/oee/time?dateEnd=${endDate}&dateStart=${startDate}&resCode=${resCode}&onlyPerf=false`
+		);
+		if (intelcalcAPIResponse.ok) {
+			const data = await intelcalcAPIResponse.json();
+			const gaugeDetails = {
+				performance: data?.data?.performance,
+				quality: data?.data?.quality,
+				available: data?.data?.available,
+				oee: data?.data?.oee,
+			};
 
-        console.log("Start Date (ISO):", startDate);
-        console.log("End Date (ISO):", endDate);
+			// Atualiza textos gauges
+			components.forEach((component) => {
+				const elementText = document.getElementById(`text-${component}`);
+				const elementRing = document.getElementById(`ring-${component}`);
+				const value = gaugeDetails[component];
 
-        const intelcalcAPIResponse = await fetch(
-            `https://intelcalc.apps.intelbras.com.br/v1/oee/time?dateEnd=${endDate}&dateStart=${startDate}&resCode=${resCode}&onlyPerf=false`
-        );
+				if (elementText && elementRing) {
+					updateGauge(value, `text-${component}`, `ring-${component}`);
+				} else {
+					console.error(`Elemento não encontrado para ${component}`);
+				}
+			});
 
-        if (intelcalcAPIResponse.ok) {
-            const data = await intelcalcAPIResponse.json();
-            const gaugeDetails = {
-                performance: data?.data?.performance,
-                quality: data?.data?.quality,
-                available: data?.data?.available,
-                oee: data?.data?.oee,
-            };
-
-            components.forEach((component) => {
-                const elementText = document.getElementById(`text-${component}`);
-                const elementRing = document.getElementById(`ring-${component}`);
-                const value = gaugeDetails[component];
-
-                if (elementText && elementRing) {
-                    updateGauge(value, `text-${component}`, `ring-${component}`);
-                } else {
-                    console.error(`Elemento não encontrado para ${component}`);
-                }
-            });
-
-            // setInterval(() => {
-            //     components.forEach((component) => {
-            //         const value = gaugeDetails[component];
-            //         updateGauge(value, `text-${component}`, `ring-${component}`);
-            //     });
-            // }, 15000);
-        } else {
-            console.error("Erro ao buscar dados da API:", intelcalcAPIResponse.status);
-        }
-    } catch (error) {
-        console.error("Falha ao buscar dados:", error);
-    }
+			// Simula atualizações periódicas a cada 15 segundos
+			// setInterval(() => {
+			// 	components.forEach((component) => {
+			// 		const value = gaugeDetails[component];
+			// 		updateGauge(value, `text-${component}`, `ring-${component}`);
+			// 	});
+			// }, 15000);
+		}
+	} catch (error) {
+		console.error("Falha ao buscar dados:", error);
+	}
 }
+
 
 // Atualiza os gauges
 function updateGauge(value, textId, ringId) {
@@ -195,30 +157,14 @@ function updateGauge(value, textId, ringId) {
 	}
 }
 
-// Inicialização ao detectar marcador
-document.addEventListener("markerFound", async (event) => {
-    const markerId = event.detail.id; // ID do marcador detectado
-    const markerElement = document.getElementById(markerId);
-    const macAddress = markerElement?.getAttribute("data-mac"); // Obtém o endereço MAC
+document.addEventListener('DOMContentLoaded', async () => {
+    const { rescode, statusDate } = await initAR();  // Pega rescode e statusDate diretamente de initAR
 
-    if (macAddress) {
-        console.log(`Endereço MAC detectado: ${macAddress}`);
-        try {
-            const { rescode, statusDate } = await initAR(macAddress);  // Pega rescode e statusDate diretamente de initAR
-
-            if (rescode && statusDate) {
-                const timeDetails = await initTime(macAddress);  // Passa o macAddress para obter tempo
-                if (timeDetails) {
-                    initGauges(rescode, timeDetails.dateStart, timeDetails.dateEnd);  // Passa os dados para initGauges
-                } else {
-                    console.error("Falha ao obter dados de tempo. initGauges não será chamado.");
-                }
-            } 
-        } catch (error) {
-            console.error("Erro durante a inicialização:", error);
+    if (rescode && statusDate) {
+        const timeDetails = await initTime(rescode, statusDate);
+        if (timeDetails) {
+            initGauges(rescode, timeDetails.dateStart, timeDetails.dateEnd);  // Passa os dados para initGauges
         }
-    } else {
-        console.error("Nenhum endereço MAC encontrado para o marcador.");
     }
 });
 
@@ -321,6 +267,14 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 	}
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+	initAR();
+	updateMachineStatus()
+	updateStatusPercentage()
+	updateProductionBar()
+	updateProductionStatus()
+});
+
 // BARRA DE PRODUÇÃO .........................................................
 
 // Função que calcula e atualiza o percentual de produção no elemento HTML e retorna o valor
@@ -355,78 +309,3 @@ function updateProductionStatus() {
 	updateProductionBar(updateStatusPercentage()); 
 }
 // setInterval(updateProductionStatus, 10000);  // Atualiza a cada 10 segundo
-
-// MARCADOR ......................................................................
-
-// Track the currently active marker to prevent multiple detections
-let activeMarker = null;
-// Stores the last detected machine details
-let lastDetectedMachineDetails = null; 
-
-async function handleMarkerDetection(markerId) {
-    if (activeMarker) {
-        console.log(`Outro marcador (${activeMarker}) já está sendo processado.`);
-        return;
-    }
-
-    activeMarker = markerId;
-
-    const markerElement = document.getElementById(markerId);
-    const macAddress = markerElement?.getAttribute("data-mac"); // Obtém o MAC do marcador
-
-    if (macAddress) {
-        console.log(`Endereço MAC detectado do marcador ${markerId}: ${macAddress}`);
-
-        try {
-            // Obtém os detalhes de tempo a partir do MAC Address
-            const timeDetails = await initTime(macAddress);
-
-            if (timeDetails && timeDetails.dateStart && timeDetails.dateEnd) {
-                console.log("Dados de tempo recebidos, chamando initGauges:", timeDetails);
-
-                // Inicializa os gauges com os dados obtidos
-                await initGauges(timeDetails.resCode, timeDetails.dateStart, timeDetails.dateEnd);
-            } else {
-                console.error("Falha ao obter dados de tempo. initGauges não será chamado.");
-            }
-        } catch (error) {
-            console.error("Erro durante a inicialização com o marcador:", error);
-        }
-    } else {
-        console.error("Nenhum endereço MAC válido encontrado para este marcador.");
-    }
-
-    activeMarker = null; // Reseta o marcador ativo
-}
-
-function handleMarkerLoss(markerId) {
-    console.log(`Marker ${markerId} lost. Retaining last detected data.`);
-    if (activeMarker === markerId) {
-        activeMarker = null;
-
-        if (lastDetectedMachineDetails) {
-            // Retain the displayed data
-            const components = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "nextop", "rescode", "itemtool", "item", "status"];
-
-            for (const component of components) {
-                const element = document.getElementById(component);
-                if (element) {
-                    element.setAttribute("value", lastDetectedMachineDetails[component]);
-                }
-            }
-
-            // Retain the production bar state
-            updateProductionBar(lastDetectedMachineDetails);
-        }
-    }
-}
-
-// Add event listeners for each registered marker
-const registeredMarkers = ['machine1-marker', 'machine2-marker','machine3-marker', 'machine4-marker'];
-registeredMarkers.forEach(markerId => {
-    const markerElement = document.getElementById(markerId);
-    if (markerElement) {
-        markerElement.addEventListener('markerFound', () => handleMarkerDetection(markerId));
-        markerElement.addEventListener('markerLost', () => handleMarkerLoss(markerId));
-    }
-});
