@@ -200,7 +200,7 @@ function updateGauge(value, textId, ringId) {
 document.addEventListener("markerFound", async (event) => {
     const markerId = event.detail.id; // ID do marcador detectado
     const markerElement = document.getElementById(markerId);
-    const macAddress = markerElement?.getAttribute("data-mac");
+    const macAddress = markerElement?.getAttribute("data-mac"); // Obtém o MAC do marcador
     console.log("macAddress encontrado:", macAddress);
     
     if (macAddress) {
@@ -225,8 +225,6 @@ document.addEventListener("markerFound", async (event) => {
     }
 });
 
-
-
 // STATUS MACHINE ...............................................................................
 
 async function updateMachineStatus(status, stopDetails, machineDetails) {
@@ -244,7 +242,6 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 	// 	document.getElementById("box").setAttribute("material", "color: #fc1723, opacity: 0.9;"); // funciona?
 	// document.getElementById("box").setAttribute("color", "#fc1723");
 	// document.getElementById("box").setAttribute("opacity", "0.9");
-
 	// 	document.getElementById("nextop").setAttribute("value", machineDetails.errorMessage);
 // }
 
@@ -366,7 +363,7 @@ let activeMarker = null;
 // Stores the last detected machine details
 let lastDetectedMachineDetails = null; 
 
-async function handleMarkerDetection(markerId) {
+async function markerDetection(markerId) {
     if (activeMarker) {
         console.log(`Outro marcador (${activeMarker}) já está sendo processado.`);
         return;
@@ -382,13 +379,10 @@ async function handleMarkerDetection(markerId) {
 
         try {
             // Obtém os detalhes de tempo a partir do MAC Address
-            // const { rescode } = await initAR(macAddress);
-            // const { dateStart, dateEnd } = await initGauges(rescode, dateStart, dateEnd); 
             const { rescode, dateStart, dateEnd } = await initTime(rescode, dateStart, dateEnd); 
 
             if (rescode && dateStart && dateEnd) {
                 console.log("Dados de tempo recebidos, chamando initGauges:", rescode, dateStart, dateEnd);
-
                 // Inicializa os gauges com os dados obtidos
                 await initGauges(rescode, dateStart, dateEnd);
             } else {
@@ -400,11 +394,10 @@ async function handleMarkerDetection(markerId) {
     } else {
         console.error("Nenhum endereço MAC válido encontrado para este marcador.");
     }
-
     activeMarker = null; // Reseta o marcador ativo
 }
 
-function handleMarkerLoss(markerId) {
+function markerLoss(markerId) {
     console.log(`Marker ${markerId} lost. Retaining last detected data.`);
     if (activeMarker === markerId) {
         activeMarker = null;
@@ -431,7 +424,7 @@ const registeredMarkers = ['machine1-marker', 'machine2-marker','machine3-marker
 registeredMarkers.forEach(markerId => {
     const markerElement = document.getElementById(markerId);
     if (markerElement) {
-        markerElement.addEventListener('markerFound', () => handleMarkerDetection(markerId));
-        markerElement.addEventListener('markerLost', () => handleMarkerLoss(markerId));
+        markerElement.addEventListener('markerFound', () => markerDetection(markerId));
+        markerElement.addEventListener('markerLost', () => markerLoss(markerId));
     }
 });

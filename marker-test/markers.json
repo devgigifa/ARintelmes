@@ -1,0 +1,23 @@
+[
+    {
+      "id": "machine1-marker",
+      "url": "https://cors-anywhere.herokuapp.com/https://raw.githubusercontent.com/alssnfb/nftmarkertest/main/nft_markers/machine_1/",
+      "data-mac": "D0:EF:76:44:93:E7"
+    },
+    {
+      "id": "machine2-marker",
+      "url": "https://cors-anywhere.herokuapp.com/https://raw.githubusercontent.com/alssnfb/nftmarkertest/main/nft_markers/machine_2/",
+      "data-mac": "D0:EF:76:44:93:E7"
+    },
+    {
+      "id": "machine3-marker",
+      "url": "https://cors-anywhere.herokuapp.com/https://raw.githubusercontent.com/alssnfb/nftmarkertest/main/nft_markers/machine_3/",
+      "data-mac": "D0:EF:76:44:93:E7"
+    },
+    {
+      "id": "machine4-marker",
+      "url": "https://cors-anywhere.herokuapp.com/https://raw.githubusercontent.com/alssnfb/nftmarkertest/main/nft_markers/machine_4/",
+      "data-mac": "D0:EF:76:44:93:E7"
+    }
+  ]
+  

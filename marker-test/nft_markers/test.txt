@@ -1,0 +1,41 @@
+<script>
+  // Função para carregar os marcadores dinamicamente
+  function loadMarkers() {
+    fetch('path/para/markers.json')  // Substitua pelo caminho correto do arquivo JSON
+      .then(response => response.json())
+      .then(markers => {
+        markers.forEach(marker => {
+          // Criar o <a-marker> dinamicamente
+          const markerElement = document.createElement('a-marker');
+          markerElement.setAttribute('id', marker.id);
+          markerElement.setAttribute('type', 'nft');
+          markerElement.setAttribute('url', marker.url);
+
+          // Criar o <a-entity> para cada marcador (pode ser usado para modelagem, etc.)
+          const entity = document.createElement('a-entity');
+          entity.setAttribute('position', '0 0 0');
+          entity.setAttribute('visible', 'false');
+          markerElement.appendChild(entity);
+
+          // Adicionar o <a-marker> à cena
+          document.querySelector('a-scene').appendChild(markerElement);
+
+          // Adicionar evento de detecção do marcador
+          markerElement.addEventListener('markerFound', () => {
+            console.log(`Marcador encontrado: ${marker.id}`);
+            console.log(`URL do NFT: ${marker.url}`);
+            console.log(`MAC: ${marker['data-mac']}`);
+
+            // Aqui você pode fazer o que quiser com as informações
+            // Exemplo: Atualizar a UI
+            document.getElementById('info').textContent = `Marcador ${marker.id} encontrado!`;
+          });
+        });
+      })
+      .catch(error => console.error('Erro ao carregar marcadores:', error));
+  }
+
+  // Chama a função para carregar os marcadores
+  loadMarkers();
+</script>
+  
