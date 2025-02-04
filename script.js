@@ -3,7 +3,7 @@ async function initAR() {
 	const scene = document.querySelector("#a-scene");
 	scene.style.display = "block"; 
 	const components = ["cycletime", "operationcode", "quantity", "quantityprod", "scrapquantity", "goodquantity", "perf", "nextop", "rescode", "itemtool", "item", "status"];
-	const qrCodeResponse = 'D0:EF:76:44:A8:5B'; // Endereço de MAC
+	const qrCodeResponse = 'D0:EF:76:44:CD:C7'; // Endereço de MAC
 
 	if (qrCodeResponse) {
 		try {
@@ -26,6 +26,9 @@ async function initAR() {
 					itemname: data?.data[0]?.orders?.currents[0]?.item?.name,
 					item: `${data?.data[0]?.orders?.currents[0]?.item?.code} - ${data?.data[0]?.orders?.currents[0]?.item?.name}`,
 					orders: data?.data[0]?.orders?.currents[0].production,
+                    statusDate: data?.data?.[0].statusDate,
+					// error: data?data[0]?.error
+					// errorMessage: data?data[0]?.errorMessage
 				};
 
 				// Atualiza todos os componentes
@@ -38,8 +41,8 @@ async function initAR() {
 				// Atualiza o status da máquina
 				updateMachineStatus(status, stopDetails, machineDetails);
 
-				return machineDetails.rescode;
-			}
+                return { rescode: machineDetails.rescode, statusDate: machineDetails.statusDate };  // Retorna um objeto com rescode e statusDate            
+                }
 		} catch (error) {
 			console.error("Failed to fetch data:", error);
 		}
@@ -47,48 +50,36 @@ async function initAR() {
 }
 
 // TIME ......................................................................
-async function initTime(resCode) {
-	if (!resCode) return;
+async function initTime(resCode, statusDate) {
+    if (!resCode || !statusDate) return;
 
-	try {
-		const productiveDateAps = await fetch(
-			`https://intelcalc.apps.intelbras.com.br/v1/resources/${resCode}/aps/calendar/productive?date=${new Date().toISOString()}`
-		);
-		if (!productiveDateAps.ok) {
-			console.error("Erro ao buscar dados da API:", productiveDateAps.status);
-			return;
-		}
-		const { dateStart } = (await productiveDateAps.json()).data || {};
-		if (!dateStart) {
-			console.error("Data de início não encontrada.");
-			return;
-		}
+    try {
+        // Converter o statusDate para o horário local
+        const toLocalTime = (date) => new Date(new Date(date).getTime() - new Date(date).getTimezoneOffset() * 60000);
+        const startDate = toLocalTime(statusDate); // Usa statusDate diretamente
+        const endDate = toLocalTime(new Date());  // Horário atual ajustado para o horário local
 
-		// ajustar datas para o horário local
-		const toLocalTime = (date) => new Date(new Date(date).getTime() - new Date(date).getTimezoneOffset() * 60000);
-		const localStartDate = toLocalTime(dateStart); // Ajusta o horário de início
-		const localEndDate = toLocalTime(new Date());  // Ajusta o horário atual
-		// log de data
-		console.log("Start Date (API, ajustado para o horário local):", localStartDate.toISOString());
-		console.log("End Date (Hora atual ajustada para o horário local):", localEndDate.toISOString());
+        // log de data
+        console.log("Start Date (do statusDate, ajustado para o horário local):", startDate.toISOString());
+        console.log("End Date (Hora atual ajustada para o horário local):", endDate.toISOString());
 
-		const operationTime = (localEndDate - localStartDate) / 60000;
-		const hours = Math.floor(operationTime / 60);
-		const minutes = Math.floor(operationTime % 60);
-		const duration = hours > 0 ? `${hours} h` : `${minutes} min`;
+        const operationTime = (endDate - startDate) / 60000;
+        const hours = Math.floor(operationTime / 60);
+        const minutes = Math.floor(operationTime % 60);
+        const duration = hours > 0 ? `${hours} h` : `${minutes} min`;
 
-		// log tempo de operação
-		console.log(`A máquina funcionou por ${duration}.`);
+        // log tempo de operação
+        console.log(`A máquina funcionou por ${duration}.`);
 
-		// atualiza valor do elemento
-		const hoursElement = document.getElementById("hours");
-		hoursElement?.setAttribute("value", duration);
+        // Atualiza o valor do elemento
+        const hoursElement = document.getElementById("hours");
+        hoursElement?.setAttribute("value", duration);
 
-		return { dateStart: localStartDate.toISOString(), dateEnd: localEndDate.toISOString() };
+        return { dateStart: startDate.toISOString(), dateEnd: endDate.toISOString() };
 
-	} catch (error) {
-		console.error("Erro ao processar os dados:", error);
-	}
+    } catch (error) {
+        console.error("Erro ao processar os dados:", error);
+    }
 }
 
 // GAUGES ................................................................
@@ -149,7 +140,6 @@ function updateGauge(value, textId, ringId) {
 
 	if (textRing && ring) {
 		textRing.setAttribute('value', `${textId.split('-')[1]}: ${Math.round(value)}%`);
-		// verifica se o valor é maior que 100 e aplica a cor verde escuro
 		let color;
 		if (value > 100) {
 			color = 'rgb(0, 128, 0)';
@@ -168,14 +158,17 @@ function updateGauge(value, textId, ringId) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-	const resCode = await initAR();  // Pega o rescode de initAR
-	if (resCode) {
-		const timeDetails = await initTime(resCode);  // Pega dateStart e dateEnd de initTime
-		if (timeDetails) {
-			initGauges(resCode, timeDetails.dateStart, timeDetails.dateEnd);  // Passa os dados para initGauges
-		}
-	}
+    const { rescode, statusDate } = await initAR();  // Pega rescode e statusDate diretamente de initAR
+
+    if (rescode && statusDate) {
+        const timeDetails = await initTime(rescode, statusDate);
+        if (timeDetails) {
+            initGauges(rescode, timeDetails.dateStart, timeDetails.dateEnd);  // Passa os dados para initGauges
+        }
+    }
 });
+
+
 
 // STATUS MACHINE ...............................................................................
 
@@ -183,11 +176,20 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
     // Função para esconder os elementos
     const hideElements = () => {
 		const elementsToHide = [ "cycletime", "operationcode", "quantity", "quantityprod", "item", "scrapquantity", "perf", "goodquantity", "calcProdNum", "op", "qtd", "qtdboa", "qtdprod", "ref", "itemtool", "nextop", "statusPercentage", "lineI", "lineII"  ];
-        elementsToHide.forEach(id => {
+		document.getElementById("bar").setAttribute("opacity", "0.35");
+		elementsToHide.forEach(id => {
             const element = document.getElementById(id);
             if (element) element.setAttribute("visible", "false");
         });
     };
+
+// if (machineDetails.error !== null){
+	// 	document.getElementById("box").setAttribute("material", "color: #fc1723, opacity: 0.9;"); // funciona?
+	// document.getElementById("box").setAttribute("color", "#fc1723");
+	// document.getElementById("box").setAttribute("opacity", "0.9");
+
+	// 	document.getElementById("nextop").setAttribute("value", machineDetails.errorMessage);
+// }
 
 	// PRODUÇÃO
 	if (status === "PRODUCTION") {
@@ -196,10 +198,9 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 		document.getElementById("entity").setAttribute("visible", "true");        
 		document.getElementById("grandbox").setAttribute("color", "#00a335");
 		document.getElementById("status").setAttribute("value", "PRODUCAO");
-
+			
 		if (!machineDetails.orders) {
 			document.getElementById("tc").setAttribute("value", "sem item");
-			document.getElementById("bar").setAttribute("visible", "true");
 			hideElements()
 		}
 		updateProductionStatus(machineDetails);
@@ -222,11 +223,11 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 			document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);
 			document.getElementById("status").setAttribute("value", "PARADO");
 			document.getElementById("tc").setAttribute("value", stopDetails.name);
-			document.getElementById("bar").setAttribute("visible", "true");
 			hideElements()
 		}
 		if (stopDetails.color === "CBDEE8") { document.getElementById("grandbox").setAttribute("color", "#bdbdbd") }
 		if (stopDetails.color === "FFCC47") { document.getElementById("grandbox").setAttribute("color", "#eead2d") }
+		if (stopDetails.color === "f8e71c") { document.getElementById("grandbox").setAttribute("color", "#ffc222") }
 		updateProductionStatus(machineDetails);
 	}
 
@@ -237,7 +238,7 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 		document.getElementById("grandbox").setAttribute("color", "#adb3b7");
 		document.getElementById("status").setAttribute("value", "INATIVO");
 		document.getElementById("item").setAttribute("value", "FORA DE TURNO: MAQUINA DESLIGADA PLANEJADA");
-		document.getElementById("bar").setAttribute("visible", "true");
+		document.getElementById("bar").setAttribute("opacity", "0.35");
 
 		hideElements()
 		updateProductionStatus(machineDetails);
@@ -248,7 +249,9 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 		document.getElementById("entity").setAttribute("visible", "true");        
 	    document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);
 	    document.getElementById("status").setAttribute("value", "INICIO DE OP");
+		document.getElementById("status").setAttribute("color", "#DA4710");
 	    // document.getElementById("item").setAttribute("value", stopDetails.name);
+
 	    updateProductionStatus(machineDetails);
 	}
 
@@ -257,19 +260,20 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 		document.getElementById("entity").setAttribute("visible", "true");        
 	    document.getElementById("grandbox").setAttribute("color", `#${stopDetails.color || '00a335'}`);        
 	    document.getElementById("status").setAttribute("value", "TROCA DE OP");
+		document.getElementById("status").setAttribute("color", "#DA4710");
+		// document.getElementById("item").setAttribute("value", stopDetails.name);
+
 	    updateProductionStatus(machineDetails);
 	}
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-	updateProductionBar();
 	initAR();
 	updateMachineStatus()
 	updateStatusPercentage()
 	updateProductionBar()
 	updateProductionStatus()
 });
-
 
 // BARRA DE PRODUÇÃO .........................................................
 
@@ -304,4 +308,4 @@ function updateProductionBar(value) {
 function updateProductionStatus() {
 	updateProductionBar(updateStatusPercentage()); 
 }
-setInterval(updateProductionStatus, 10000);  // Atualiza a cada 10 segundo
+// setInterval(updateProductionStatus, 10000);  // Atualiza a cada 10 segundo
