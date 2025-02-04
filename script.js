@@ -1,9 +1,10 @@
-// script.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    initAR();
-    initGauges();
-    updateProductionBar();
+	initAR();
+	updateMachineStatus()
+	updateStatusPercentage()
+	updateProductionBar()
+	updateProductionStatus()
 });
 
 async function initAR(macAddress) {
@@ -33,6 +34,7 @@ async function initAR(macAddress) {
 					itemname: data?.data[0]?.orders?.currents[0]?.item?.name,
 					item: `${data?.data[0]?.orders?.currents[0]?.item?.code} - ${data?.data[0]?.orders?.currents[0]?.item?.name}`,
 					orders: data?.data[0]?.orders?.currents[0].production,
+                    statusDate: data?.data?.[0].statusDate,
 					// error: data?data[0]?.error
 					// errorMessage: data?data[0]?.errorMessage
 				};
@@ -46,7 +48,7 @@ async function initAR(macAddress) {
 				}
 				// Atualiza o status da máquina
 				updateMachineStatus(status, stopDetails, machineDetails);
-                return rescode;
+                return { rescode: machineDetails.rescode, statusDate: machineDetails.statusDate };  // Retorna um objeto com rescode e statusDate            
             } else {
                 console.error("Erro na resposta da API:", intelmountAPIResponse.status);
                 return null;
@@ -65,57 +67,41 @@ async function initAR(macAddress) {
 async function initTime(macAddress) {
     console.log("Initializing time with MAC Address:", macAddress);
 
-    const resCode = await initAR(macAddress);
-
-    if (!resCode || typeof resCode !== "string") {
-        console.error("Invalid rescode returned from initAR:", resCode);
-        return null; // Retorne null caso o resCode seja inválido
+    const { rescode, statusDate } = await initAR(macAddress);
+    
+    if (!rescode || typeof rescode !== "string") {
+        console.error("Invalid rescode returned from initAR:", rescode);
+        return null; // Retorne null caso o rescode seja inválido
     }
 
-    console.log("Initializing time with rescode:", resCode);
+    console.log("Initializing time with rescode:", rescode);
 
     try {
-        const productiveDateAps = await fetch(
-            `https://intelcalc.apps.intelbras.com.br/v1/resources/${resCode}/aps/calendar/productive?date=${new Date().toISOString()}`
-        );
+        // Converter o statusDate para o horário local
+        const toLocalTime = (date) => new Date(new Date(date).getTime() - new Date(date).getTimezoneOffset() * 60000);
+        const startDate = toLocalTime(statusDate); // Usa statusDate diretamente
+        const endDate = toLocalTime(new Date());  // Horário atual ajustado para o horário local
 
-        if (productiveDateAps.ok) {
-            const data = await productiveDateAps.json();
-            console.log("Productive data fetched:", data);
+        // log de data
+        console.log("Start Date (do statusDate, ajustado para o horário local):", startDate.toISOString());
+        console.log("End Date (Hora atual ajustada para o horário local):", endDate.toISOString());
 
-            const timeDetails = {
-                dateStart: data?.data?.dateStart,
-                dateEnd: data?.data?.dateEnd,
-                resCode: resCode, 
-            };
+        const operationTime = (endDate - startDate) / 60000;
+        const hours = Math.floor(operationTime / 60);
+        const minutes = Math.floor(operationTime % 60);
+        const duration = hours > 0 ? `${hours} h` : `${minutes} min`;
 
-            console.log("Time details:", timeDetails);
+        // log tempo de operação
+        console.log(`A máquina funcionou por ${duration}.`);
 
-            const startDate = new Date(timeDetails.dateStart);
-            const endDate = new Date();
-            const operationTime = (endDate - startDate) / 60000;
+        // Atualiza o valor do elemento
+        const hoursElement = document.getElementById("hours");
+        hoursElement?.setAttribute("value", duration);
 
-            const hours = Math.floor(operationTime / 60);
-            const minutes = Math.floor(operationTime % 60);
-            const duration = hours > 0 ? `${hours} h` : `${minutes} min`;
-
-            console.log(`The machine operated for ${duration}.`);
-
-            const hoursElement = document.getElementById("hours");
-            if (hoursElement) {
-                hoursElement.setAttribute("value", duration);
-            } else {
-                console.error("Element with id 'hours' not found.");
-            }
-
-            return timeDetails; // Certifique-se de retornar os dados
-        } else {
-            console.error("Failed to fetch productive data:", productiveDateAps.status);
-        }
+        return { startDate: startDate.toISOString(), endDate: endDate.toISOString() };
     } catch (error) {
         console.error("Error while processing productive data:", error);
     }
-
     return null;
 }
 
@@ -131,23 +117,27 @@ function updateMachineDataUI(machineDetails) {
 
 // GAUGES ................................................................
 
-async function initGauges(resCode, dateStart, dateEnd) {
-    if (!dateStart || !dateEnd) {
-        console.error("Invalid dateStart or dateEnd provided to initGauges.");
+async function initGauges(macAddress) {
+    if (!startDate || !endDate) {
+        console.error("Invalid startDate or endDate provided to initGauges.");
         return;
     }
-
     const components = ["performance", "quality", "available", "oee"];
 
     try {
-        const startDate = new Date(dateStart).toISOString();
-        const endDate = new Date(dateEnd).toISOString();
+        const {startDate, endDate} = initTime(startDate, endDate)
+        const { rescode } = await initAR(macAddress);
+    // tem que pegar startDate de initTime e usar
+    // tem que pegar rescode de initAR ou de initTime
+
+        // const startDate = new Date(startDate).toISOString();
+        // const endDate = new Date(endDate).toISOString();
 
         console.log("Start Date (ISO):", startDate);
         console.log("End Date (ISO):", endDate);
 
         const intelcalcAPIResponse = await fetch(
-            `https://intelcalc.apps.intelbras.com.br/v1/oee/time?dateEnd=${endDate}&dateStart=${startDate}&resCode=${resCode}&onlyPerf=false`
+            `https://intelcalc.apps.intelbras.com.br/v1/oee/time?endDate=${endDate}&startDate=${startDate}&rescode=${rescode}&onlyPerf=false`
         );
 
         if (intelcalcAPIResponse.ok) {
@@ -213,23 +203,23 @@ function updateGauge(value, textId, ringId) {
 document.addEventListener("markerFound", async (event) => {
     const markerId = event.detail.id; // ID do marcador detectado
     const markerElement = document.getElementById(markerId);
-    const macAddress = markerElement?.getAttribute("data-mac"); // Obtém o endereço MAC
-
+    const macAddress = markerElement?.getAttribute("data-mac"); // Obtém o MAC do marcador
+    console.log("macAddress encontrado:", macAddress);
+    
     if (macAddress) {
         console.log(`Endereço MAC detectado: ${macAddress}`);
-
         try {
-            // Chama initTime e aguarda os dados
-            const timeDetails = await initTime(macAddress);
+            const { rescode, statusDate } = await initAR(macAddress);  // Pega rescode e statusDate diretamente de initAR
+            const { startDate, endDate } = await initGauges(rescode, startDate, endDate); 
 
-            if (timeDetails && timeDetails.dateStart && timeDetails.dateEnd) {
-                console.log("Dados de tempo recebidos, chamando initGauges:", timeDetails);
-
-                // Chama initGauges com os dados retornados
-                await initGauges(timeDetails.resCode, timeDetails.dateStart, timeDetails.dateEnd);
-            } else {
-                console.error("Falha ao obter dados de tempo. initGauges não será chamado.");
-            }
+            if (rescode && statusDate) {
+                const timeDetails = await initTime(macAddress);  // Passa o macAddress para obter tempo
+                if (timeDetails) {
+                    initGauges(rescode, startDate, endDate);  // Passa os dados para initGauges
+                } else {
+                    console.error("Falha ao obter dados de tempo. initGauges não será chamado.");
+                }
+            } 
         } catch (error) {
             console.error("Erro durante a inicialização:", error);
         }
@@ -237,7 +227,6 @@ document.addEventListener("markerFound", async (event) => {
         console.error("Nenhum endereço MAC encontrado para o marcador.");
     }
 });
-
 
 // STATUS MACHINE ...............................................................................
 
@@ -253,8 +242,10 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
     };
 
 // if (machineDetails.error !== null){
-// 	document.getElementById("box").setAttribute("material", "color: #fc1723, opacity: 0.9;");
-// 	document.getElementById("nextop").setAttribute("value", machineDetails.errorMessage);
+	// 	document.getElementById("box").setAttribute("material", "color: #fc1723, opacity: 0.9;"); // funciona?
+	// document.getElementById("box").setAttribute("color", "#fc1723");
+	// document.getElementById("box").setAttribute("opacity", "0.9");
+	// 	document.getElementById("nextop").setAttribute("value", machineDetails.errorMessage);
 // }
 
 	// PRODUÇÃO
@@ -264,7 +255,7 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 		document.getElementById("entity").setAttribute("visible", "true");        
 		document.getElementById("grandbox").setAttribute("color", "#00a335");
 		document.getElementById("status").setAttribute("value", "PRODUCAO");
-
+			
 		if (!machineDetails.orders) {
 			document.getElementById("tc").setAttribute("value", "sem item");
 			hideElements()
@@ -293,6 +284,7 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 		}
 		if (stopDetails.color === "CBDEE8") { document.getElementById("grandbox").setAttribute("color", "#bdbdbd") }
 		if (stopDetails.color === "FFCC47") { document.getElementById("grandbox").setAttribute("color", "#eead2d") }
+		if (stopDetails.color === "f8e71c") { document.getElementById("grandbox").setAttribute("color", "#ffc222") }
 		updateProductionStatus(machineDetails);
 	}
 
@@ -374,7 +366,7 @@ let activeMarker = null;
 // Stores the last detected machine details
 let lastDetectedMachineDetails = null; 
 
-async function handleMarkerDetection(markerId) {
+async function markerDetection(markerId) {
     if (activeMarker) {
         console.log(`Outro marcador (${activeMarker}) já está sendo processado.`);
         return;
@@ -390,15 +382,23 @@ async function handleMarkerDetection(markerId) {
 
         try {
             // Obtém os detalhes de tempo a partir do MAC Address
-            const timeDetails = await initTime(macAddress);
+            const { rescode, statusDate } = await initAR(macAddress);
 
-            if (timeDetails && timeDetails.dateStart && timeDetails.dateEnd) {
-                console.log("Dados de tempo recebidos, chamando initGauges:", timeDetails);
+            if (rescode && statusDate) {
+                console.log(`Dados recebidos - rescode: ${rescode}, statusDate: ${statusDate}`);
+                
+                // Agora passamos o rescode e statusDate para a próxima função
+                const { startDate, endDate } = await initTime(macAddress); // Passa o macAddress para initTime
 
-                // Inicializa os gauges com os dados obtidos
-                await initGauges(timeDetails.resCode, timeDetails.dateStart, timeDetails.dateEnd);
+                if (startDate && endDate) {
+                    console.log("Dados de tempo recebidos, chamando initGauges:", rescode, startDate, endDate);
+                    // Inicializa os gauges com os dados obtidos
+                    await initGauges(rescode, startDate, endDate);
+                } else {
+                    console.error("Falha ao obter dados de tempo. initGauges não será chamado.");
+                }
             } else {
-                console.error("Falha ao obter dados de tempo. initGauges não será chamado.");
+                console.error("Falha ao obter rescode ou statusDate.");
             }
         } catch (error) {
             console.error("Erro durante a inicialização com o marcador:", error);
@@ -410,7 +410,8 @@ async function handleMarkerDetection(markerId) {
     activeMarker = null; // Reseta o marcador ativo
 }
 
-function handleMarkerLoss(markerId) {
+
+function markerLoss(markerId) {
     console.log(`Marker ${markerId} lost. Retaining last detected data.`);
     if (activeMarker === markerId) {
         activeMarker = null;
@@ -437,7 +438,7 @@ const registeredMarkers = ['machine1-marker', 'machine2-marker','machine3-marker
 registeredMarkers.forEach(markerId => {
     const markerElement = document.getElementById(markerId);
     if (markerElement) {
-        markerElement.addEventListener('markerFound', () => handleMarkerDetection(markerId));
-        markerElement.addEventListener('markerLost', () => handleMarkerLoss(markerId));
+        markerElement.addEventListener('markerFound', () => markerDetection(markerId));
+        markerElement.addEventListener('markerLost', () => markerLoss(markerId));
     }
 });
