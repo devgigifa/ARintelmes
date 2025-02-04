@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8" />
     <title>AR Intelmes</title>
@@ -34,23 +34,23 @@
     >
         <a-entity camera position="0 1 0" look-controls="enabled: false"></a-entity>
 
-<!-- mac -->
-
-    <a-nft type="nft" url="https://cors-anywhere.herokuapp.com/https://raw.githubusercontent.com/alssnfb/nftmarkertest/main/nft_markers/machine_1/" smooth="true" smoothCount="10" smoothTolerance=".01" smoothThreshold="5" id="machine1-marker" data-mac="DD0:EF:76:46:72:0B">
+<!-- mac ................................................... -->
+    <a-nft type="nft" url="https://cors-anywhere.herokuapp.com/https://raw.githubusercontent.com/alssnfb/nftmarkertest/main/nft_markers/machine_1/" smooth="true" smoothCount="10" smoothTolerance=".01" smoothThreshold="5" id="machine1-marker" data-mac="D0:EF:76:44:93:E7">
         <a-entity visible="false" position="0 0 0"></a-entity>
     </a-nft>
     
-    <a-nft type="nft" url="https://cors-anywhere.herokuapp.com/https://raw.githubusercontent.com/alssnfb/nftmarkertest/main/nft_markers/machine_2/" smooth="true" smoothCount="10" smoothTolerance=".01" smoothThreshold="5" id="machine2-marker" data-mac="D0:EF:76:46:72:0B">
+    <a-nft type="nft" url="https://cors-anywhere.herokuapp.com/https://raw.githubusercontent.com/alssnfb/nftmarkertest/main/nft_markers/machine_2/" smooth="true" smoothCount="10" smoothTolerance=".01" smoothThreshold="5" id="machine2-marker" data-mac="D0:EF:76:44:93:E7">
         <a-entity visible="false" position="0 0 0"></a-entity>
     </a-nft>
     
-    <a-nft type="nft" url="https://cors-anywhere.herokuapp.com/https://raw.githubusercontent.com/alssnfb/nftmarkertest/main/nft_markers/machine_3/" smooth="true" smoothCount="10" smoothTolerance=".01" smoothThreshold="5" id="machine3-marker" data-mac="D0:EF:76:46:72:0B">
+    <a-nft type="nft" url="https://cors-anywhere.herokuapp.com/https://raw.githubusercontent.com/alssnfb/nftmarkertest/main/nft_markers/machine_3/" smooth="true" smoothCount="10" smoothTolerance=".01" smoothThreshold="5" id="machine3-marker" data-mac="D0:EF:76:44:93:E7">
         <a-entity visible="false" position="0 0 0"></a-entity>
     </a-nft>
     
-    <a-nft type="nft" url="https://cors-anywhere.herokuapp.com/https://raw.githubusercontent.com/alssnfb/nftmarkertest/main/nft_markers/machine_4/" smooth="true" smoothCount="10" smoothTolerance=".01" smoothThreshold="5" id="machine4-marker" data-mac="D0:EF:76:46:72:0B">
+    <a-nft type="nft" url="https://cors-anywhere.herokuapp.com/https://raw.githubusercontent.com/alssnfb/nftmarkertest/main/nft_markers/machine_4/" smooth="true" smoothCount="10" smoothTolerance=".01" smoothThreshold="5" id="machine4-marker" data-mac="D0:EF:76:44:93:E7">
         <a-entity visible="false" position="0 0 0"></a-entity>
     </a-nft>
+<!-- ........................................................ -->
 
 <a-entity id="entity" visible="false">
     <a-box id="grandbox" material="color: black; opacity: 1;"
@@ -253,7 +253,7 @@
         // Detect when NFT markers are found
         document.querySelector('#machine1-marker').addEventListener('markerFound', async function () {
             console.log('Machine 1 NFT marker detected!');
-            await fetchMachineData(); // Call your function to fetch data
+            await initAR(); // Call your function to fetch data
         });
 
         document.querySelector('#machine1-marker').addEventListener('markerLost', function () {
@@ -262,7 +262,7 @@
 
         document.querySelector('#machine2-marker').addEventListener('markerFound', async function () {
             console.log('Machine 2 NFT marker detected!');
-            await fetchMachineData();
+            await initAR();
         });
 
         document.querySelector('#machine2-marker').addEventListener('markerLost', function () {
