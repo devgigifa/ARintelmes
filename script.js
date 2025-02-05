@@ -118,26 +118,33 @@ function updateMachineDataUI(machineDetails) {
 // GAUGES ................................................................
 
 async function initGauges(macAddress) {
-    if (!startDate || !endDate) {
-        console.error("Invalid startDate or endDate provided to initGauges.");
+    const { rescode, statusDate } = await initAR(macAddress);
+
+    if (!rescode || !statusDate) {
+        console.error("Erro: rescode ou statusDate inválido.");
         return;
     }
-    const components = ["performance", "quality", "available", "oee"];
+
+    // Obter startDate e endDate de initTime
+    const { startDate, endDate } = await initTime(macAddress);
+    
+    if (!startDate || !endDate) {
+        console.error("Erro: startDate ou endDate inválido.");
+        return;
+    }
+
+    // Converter startDate e endDate para ISO 8601
+    const startDateISO = new Date(startDate).toISOString();
+    const endDateISO = new Date(endDate).toISOString();
+
+    console.log("Start Date (ISO):", startDateISO);
+    console.log("End Date (ISO):", endDateISO);
+    console.log("Initializing gauge with rescode:", rescode);
+
 
     try {
-        const {startDate, endDate} = initTime(startDate, endDate)
-        const { rescode } = await initAR(macAddress);
-    // tem que pegar startDate de initTime e usar
-    // tem que pegar rescode de initAR ou de initTime
-
-        // const startDate = new Date(startDate).toISOString();
-        // const endDate = new Date(endDate).toISOString();
-
-        console.log("Start Date (ISO):", startDate);
-        console.log("End Date (ISO):", endDate);
-
         const intelcalcAPIResponse = await fetch(
-            `https://intelcalc.apps.intelbras.com.br/v1/oee/time?endDate=${endDate}&startDate=${startDate}&rescode=${rescode}&onlyPerf=false`
+            `https://intelcalc.apps.intelbras.com.br/v1/oee/time?dateStart=${startDateISO}&dateEnd=${endDateISO}&resCode=${rescode}&onlyPerf=false`
         );
 
         if (intelcalcAPIResponse.ok) {
@@ -148,6 +155,8 @@ async function initGauges(macAddress) {
                 available: data?.data?.available,
                 oee: data?.data?.oee,
             };
+
+            const components = ["performance", "quality", "available", "oee"];
 
             components.forEach((component) => {
                 const elementText = document.getElementById(`text-${component}`);
@@ -160,13 +169,6 @@ async function initGauges(macAddress) {
                     console.error(`Elemento não encontrado para ${component}`);
                 }
             });
-
-            // setInterval(() => {
-            //     components.forEach((component) => {
-            //         const value = gaugeDetails[component];
-            //         updateGauge(value, `text-${component}`, `ring-${component}`);
-            //     });
-            // }, 15000);
         } else {
             console.error("Erro ao buscar dados da API:", intelcalcAPIResponse.status);
         }
@@ -174,6 +176,8 @@ async function initGauges(macAddress) {
         console.error("Falha ao buscar dados:", error);
     }
 }
+
+
 
 // Atualiza os gauges
 function updateGauge(value, textId, ringId) {
@@ -209,17 +213,16 @@ document.addEventListener("markerFound", async (event) => {
     if (macAddress) {
         console.log(`Endereço MAC detectado: ${macAddress}`);
         try {
-            const { rescode, statusDate } = await initAR(macAddress);  // Pega rescode e statusDate diretamente de initAR
-            const { startDate, endDate } = await initGauges(rescode, startDate, endDate); 
+            const { rescode } = await initAR(macAddress);  // Pega rescode e statusDate diretamente de initAR
+            const { startDate, endDate } = await initTime(macAddress); // Agora pega os valores de startDate e endDate
 
-            if (rescode && statusDate) {
-                const timeDetails = await initTime(macAddress);  // Passa o macAddress para obter tempo
-                if (timeDetails) {
-                    initGauges(rescode, startDate, endDate);  // Passa os dados para initGauges
-                } else {
-                    console.error("Falha ao obter dados de tempo. initGauges não será chamado.");
-                }
-            } 
+            if (rescode && startDate && endDate) {
+                console.log("Dados de tempo e rescode recebidos.");
+                // Inicializa os gauges com os dados obtidos
+                await initGauges(macAddress); // Passa o macAddress, que agora leva os parâmetros necessários internamente
+            } else {
+                console.error("Falha ao obter dados necessários.");
+            }
         } catch (error) {
             console.error("Erro durante a inicialização:", error);
         }
@@ -227,6 +230,7 @@ document.addEventListener("markerFound", async (event) => {
         console.error("Nenhum endereço MAC encontrado para o marcador.");
     }
 });
+
 
 // STATUS MACHINE ...............................................................................
 
@@ -383,6 +387,7 @@ async function markerDetection(markerId) {
         try {
             // Obtém os detalhes de tempo a partir do MAC Address
             const { rescode, statusDate } = await initAR(macAddress);
+            console.log("Initializing marker with rescode:", rescode);
 
             if (rescode && statusDate) {
                 console.log(`Dados recebidos - rescode: ${rescode}, statusDate: ${statusDate}`);
@@ -393,7 +398,7 @@ async function markerDetection(markerId) {
                 if (startDate && endDate) {
                     console.log("Dados de tempo recebidos, chamando initGauges:", rescode, startDate, endDate);
                     // Inicializa os gauges com os dados obtidos
-                    await initGauges(rescode, startDate, endDate);
+                    await initGauges(macAddress);
                 } else {
                     console.error("Falha ao obter dados de tempo. initGauges não será chamado.");
                 }
