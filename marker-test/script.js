@@ -177,8 +177,6 @@ async function initGauges(macAddress) {
     }
 }
 
-
-
 // Atualiza os gauges
 function updateGauge(value, textId, ringId) {
 	const textRing = document.getElementById(textId);

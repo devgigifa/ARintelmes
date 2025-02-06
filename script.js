@@ -203,7 +203,7 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 			document.getElementById("tc").setAttribute("value", "sem item");
 			hideElements()
 		}
-		updateProductionStatus(machineDetails);
+		updateProgressStatus(machineDetails);
 	}
 
 	// PARADO
@@ -228,7 +228,7 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 		if (stopDetails.color === "CBDEE8") { document.getElementById("grandbox").setAttribute("color", "#bdbdbd") }
 		if (stopDetails.color === "FFCC47") { document.getElementById("grandbox").setAttribute("color", "#eead2d") }
 		if (stopDetails.color === "f8e71c") { document.getElementById("grandbox").setAttribute("color", "#ffc222") }
-		updateProductionStatus(machineDetails);
+		updateProgressStatus(machineDetails);
 	}
 
 	// INATIVO - TESTAR
@@ -241,7 +241,7 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 		document.getElementById("bar").setAttribute("opacity", "0.35");
 
 		hideElements()
-		updateProductionStatus(machineDetails);
+		updateProgressStatus(machineDetails);
 	}
 
 	// INICIO DE OP - TESTAR
@@ -252,7 +252,7 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 		document.getElementById("status").setAttribute("color", "#DA4710");
 	    // document.getElementById("item").setAttribute("value", stopDetails.name);
 
-	    updateProductionStatus(machineDetails);
+	    updateProgressStatus(machineDetails);
 	}
 
 	// TROCA DE OP - TESTAR
@@ -263,7 +263,7 @@ async function updateMachineStatus(status, stopDetails, machineDetails) {
 		document.getElementById("status").setAttribute("color", "#DA4710");
 		// document.getElementById("item").setAttribute("value", stopDetails.name);
 
-	    updateProductionStatus(machineDetails);
+	    updateProgressStatus(machineDetails);
 	}
 }
 
@@ -271,8 +271,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	initAR();
 	updateMachineStatus()
 	updateStatusPercentage()
-	updateProductionBar()
-	updateProductionStatus()
+	updateProgressBar()
+	updateProgressStatus()
 });
 
 // BARRA DE PRODUÇÃO .........................................................
@@ -293,8 +293,8 @@ function updateStatusPercentage() {
 }
 
 // Função que ajusta o tamanho da barra de produção com base no percentual
-function updateProductionBar(value) {
-	const barFill = document.getElementById("production-bar");
+function updateProgressBar(value) {
+	const barFill = document.getElementById("progress-bar");
 	if (barFill) {
 		const fillScale = value / 100;
 		const startPos = fillScale * 1.3;
@@ -305,7 +305,7 @@ function updateProductionBar(value) {
 }
 
 // Função principal para sincronizar statusPercentage e a barra de produção
-function updateProductionStatus() {
-	updateProductionBar(updateStatusPercentage()); 
+function updateProgressStatus() {
+	updateProgressBar(updateStatusPercentage()); 
 }
-// setInterval(updateProductionStatus, 10000);  // Atualiza a cada 10 segundo
+// setInterval(updateProgressStatus, 10000);  // Atualiza a cada 10 segundo
